@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #080b12;
+    color: #e2e8f0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  :root {
+    --tg-safe-top: env(safe-area-inset-top, 0px);
+    --tg-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --nav-h: 64px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-card border border-surface-border rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover active:scale-95
+    text-white font-semibold rounded-2xl px-6 py-3
+    transition-all duration-150 font-body;
+  }
+
+  .btn-ghost {
+    @apply bg-surface-muted hover:bg-surface-border active:scale-95
+    text-slate-400 rounded-2xl px-4 py-2
+    transition-all duration-150;
+  }
+
+  .badge {
+    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(
+            90deg,
+            #0d1220 25%,
+            #131929 50%,
+            #0d1220 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .page-enter-active { animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+  .status-new       { @apply bg-blue-500/15 text-blue-400 badge; }
+  .status-confirmed { @apply bg-violet-500/15 text-violet-400 badge; }
+  .status-done      { @apply bg-indigo-500/15 text-indigo-300 badge; }
+  .status-cancelled { @apply bg-red-500/15 text-red-400 badge; }
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1a2340; border-radius: 4px; }
