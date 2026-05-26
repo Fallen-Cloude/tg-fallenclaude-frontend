@@ -1,14 +1,3 @@
-export interface Product {
-  id: string
-  name: string
-  category_id: string
-  price: number
-  description: string
-  image_url: string
-  in_stock: boolean
-  sort_order: number
-}
-
 export interface Category {
   id: string
   name: string
@@ -16,9 +5,35 @@ export interface Category {
   sort_order: number
 }
 
+export interface SubCategory {
+  id: string
+  name: string
+  category_id: string
+  sort_order: number
+}
+
+export interface SubSubCategory {
+  id: string
+  name: string
+  subcategory_id: string
+  price: number
+  strength: string
+  sort_order: number
+}
+
+export interface Product {
+  id: string
+  name: string
+  subsubcategory_id: string
+  image_url: string
+  in_stock: boolean
+  sort_order: number
+}
+
 export interface CartItem {
   product: Product
   quantity: number
+  price: number
 }
 
 export interface Order {

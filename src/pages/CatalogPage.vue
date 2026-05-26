@@ -1,71 +1,179 @@
 <template>
   <div class="flex flex-col min-h-full animate-fade-in">
-    <!-- Header -->
-    <div class="px-4 pt-6 pb-3 space-y-3 sticky top-0 z-10 bg-surface/90 backdrop-blur-xl border-b border-surface-border">
-      <h1 class="font-display text-xl font-bold text-white">Каталог</h1>
-      <!-- Search -->
-      <div class="relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input v-model="search" type="search" placeholder="Поиск товаров..."
-          class="w-full bg-surface-card border border-surface-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-brand-500 transition-colors" />
+
+    <!-- Экран 1: Категории -->
+    <template v-if="!activeCategory">
+      <div class="px-4 pt-6 pb-4">
+        <h1 class="font-display text-xl font-bold text-white mb-1">Каталог</h1>
+        <p class="text-slate-500 text-sm">Выберите категорию</p>
       </div>
-      <!-- Categories -->
-      <div class="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
-        <button v-for="cat in [{ id: '', name: 'Все' }, ...categories]" :key="cat.id"
-          class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95"
-          :class="activeCategory === cat.id
-            ? 'bg-brand-500 text-white'
-            : 'bg-surface-card border border-surface-border text-slate-400'"
-          @click="activeCategory = cat.id">
-          {{ cat.name }}
+      <div v-if="loading" class="px-4 grid grid-cols-2 gap-3">
+        <SkeletonBox v-for="i in 4" :key="i" height="120px" width="100%" />
+      </div>
+      <div v-else class="px-4 grid grid-cols-2 gap-3">
+        <button v-for="cat in categories" :key="cat.id"
+          class="card p-5 flex flex-col items-start gap-3 active:scale-95 transition-transform duration-150 text-left"
+          @click="selectCategory(cat)">
+          <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 flex items-center justify-center">
+            <span class="text-2xl">{{ catEmoji(cat.slug) }}</span>
+          </div>
+          <span class="font-display font-semibold text-sm text-white leading-snug">{{ cat.name }}</span>
         </button>
       </div>
-    </div>
+    </template>
 
-    <!-- Products grid -->
-    <div class="flex-1 p-4">
-      <div v-if="loading" class="grid grid-cols-2 gap-3">
-        <SkeletonBox v-for="i in 6" :key="i" height="220px" width="100%" />
+    <!-- Экран 2: Подкатегории (Catswill, Brusko...) -->
+    <template v-else-if="!activeSubCategory">
+      <div class="px-4 pt-4 pb-3 sticky top-0 z-10 bg-surface/95 backdrop-blur-xl border-b border-surface-border">
+        <div class="flex items-center gap-3">
+          <button class="w-8 h-8 rounded-xl bg-surface-muted flex items-center justify-center active:scale-90 transition-transform"
+            @click="activeCategory = null">
+            <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <h1 class="font-display text-base font-bold text-white">{{ activeCategory.name }}</h1>
+        </div>
+      </div>
+      <div class="px-4 pt-4 grid grid-cols-2 gap-3">
+        <button v-for="sub in activeSubs" :key="sub.id"
+          class="card p-4 flex flex-col items-start gap-2 active:scale-95 transition-transform duration-150 text-left"
+          @click="activeSubCategory = sub">
+          <span class="font-display font-semibold text-sm text-white">{{ sub.name }}</span>
+          <span class="text-xs text-slate-500">{{ subSubCount(sub.id) }} линеек</span>
+        </button>
+      </div>
+    </template>
+
+    <!-- Экран 3: Подподкатегории + товары (Catswill Premium / Sour + вкусы) -->
+    <template v-else>
+      <div class="px-4 pt-4 pb-3 sticky top-0 z-10 bg-surface/95 backdrop-blur-xl border-b border-surface-border">
+        <div class="flex items-center gap-3 mb-3">
+          <button class="w-8 h-8 rounded-xl bg-surface-muted flex items-center justify-center active:scale-90 transition-transform"
+            @click="activeSubCategory = null">
+            <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div>
+            <p class="text-xs text-slate-500">{{ activeCategory.name }} / {{ activeSubCategory.name }}</p>
+          </div>
+        </div>
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input v-model="search" type="search" placeholder="Поиск вкуса..."
+            class="w-full bg-surface-card border border-surface-border rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500 transition-colors" />
+        </div>
       </div>
 
-      <div v-else-if="filtered.length" class="grid grid-cols-2 gap-3">
-        <ProductCard v-for="p in filtered" :key="p.id" :product="p" class="animate-slide-up" />
+      <div v-if="loading" class="p-4 space-y-6">
+        <SkeletonBox v-for="i in 3" :key="i" height="200px" width="100%" />
+      </div>
+
+      <div v-else-if="groupedProducts.length" class="p-4 space-y-8">
+        <div v-for="group in groupedProducts" :key="group.ssub.id">
+          <!-- Заголовок подподкатегории с ценой и крепостью -->
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-display font-bold text-white text-sm">{{ group.ssub.name }}</h2>
+            <div class="flex items-center gap-2">
+              <div v-if="group.ssub.strength"
+                class="bg-violet-500/15 border border-violet-500/20 px-2.5 py-1 rounded-lg">
+                <span class="text-violet-300 font-semibold text-xs">{{ group.ssub.strength }}</span>
+              </div>
+              <div class="flex items-center gap-1 bg-indigo-500/15 border border-indigo-500/20 px-2.5 py-1 rounded-lg">
+                <BynIcon :size="11" class="text-indigo-400" />
+                <span class="text-indigo-400 font-display font-bold text-xs">{{ formatPrice(group.ssub.price) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Горизонтальный скролл вкусов -->
+          <div class="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+            <FlavorCard
+              v-for="product in group.products"
+              :key="product.id"
+              :product="product"
+              :price="group.ssub.price"
+            />
+          </div>
+        </div>
       </div>
 
       <div v-else class="text-center py-20 text-slate-600">
         <p class="text-4xl mb-3">🔍</p>
         <p class="text-sm">Ничего не найдено</p>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { productsApi } from '@/api'
-import ProductCard from '@/components/ProductCard.vue'
 import SkeletonBox from '@/components/SkeletonBox.vue'
-import type { Product, Category } from '@/types'
+import BynIcon from '@/components/BynIcon.vue'
+import FlavorCard from '@/components/FlavorCard.vue'
+import type { Category, SubCategory, SubSubCategory, Product } from '@/types'
 
 const loading = ref(true)
-const products = ref<Product[]>([])
 const categories = ref<Category[]>([])
-const activeCategory = ref('')
+const subcategories = ref<SubCategory[]>([])
+const subsubcategories = ref<SubSubCategory[]>([])
+const products = ref<Product[]>([])
+const activeCategory = ref<Category | null>(null)
+const activeSubCategory = ref<SubCategory | null>(null)
 const search = ref('')
 
-const filtered = computed(() => {
-  return products.value
-    .filter(p => !activeCategory.value || p.category_id === activeCategory.value)
-    .filter(p => !search.value || p.name.toLowerCase().includes(search.value.toLowerCase()))
+const CAT_EMOJI: Record<string, string> = {
+  liquids: '💧', consumables: '🔧', pods: '📦', snus: '🟢',
+}
+function catEmoji(slug: string) { return CAT_EMOJI[slug] ?? '🛍' }
+function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
+
+// Подкатегории активной категории
+const activeSubs = computed(() =>
+  subcategories.value
+    .filter(s => s.category_id === activeCategory.value?.id)
+    .sort((a, b) => a.sort_order - b.sort_order)
+)
+
+// Кол-во подподкатегорий для подкатегории
+function subSubCount(subId: string) {
+  return subsubcategories.value.filter(s => s.subcategory_id === subId).length
+}
+
+// Группировка: подподкатегория → вкусы
+const groupedProducts = computed(() => {
+  if (!activeSubCategory.value) return []
+  const subs = subsubcategories.value
+    .filter(s => s.subcategory_id === activeSubCategory.value!.id)
+    .sort((a, b) => a.sort_order - b.sort_order)
+
+  return subs.map(ssub => ({
+    ssub,
+    products: products.value
+      .filter(p => p.subsubcategory_id === ssub.id)
+      .filter(p => !search.value || p.name.toLowerCase().includes(search.value.toLowerCase()))
+      .sort((a, b) => a.sort_order - b.sort_order),
+  })).filter(g => g.products.length > 0)
 })
+
+function selectCategory(cat: Category) {
+  activeCategory.value = cat
+  activeSubCategory.value = null
+  search.value = ''
+}
 
 onMounted(async () => {
   try {
-    const [prods, cats] = await Promise.all([productsApi.getAll(), productsApi.getCategories()])
-    products.value = prods
+    const [cats, subs, ssubs, prods] = await Promise.all([
+      productsApi.getCategories(),
+      productsApi.getSubCategories(),
+      productsApi.getSubSubCategories(),
+      productsApi.getAll(),
+    ])
     categories.value = cats.sort((a, b) => a.sort_order - b.sort_order)
+    subcategories.value = subs
+    subsubcategories.value = ssubs
+    products.value = prods
   } finally {
     loading.value = false
   }

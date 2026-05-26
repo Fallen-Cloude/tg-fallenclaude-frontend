@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3">
+  <div class="space-y-3 pb-4">
     <button class="btn-primary w-full" @click="openForm()">+ Добавить</button>
 
     <div v-if="loading" class="space-y-2">
@@ -14,7 +14,7 @@
             <p class="text-xs text-slate-500 mt-0.5">{{ subtext(item) }}</p>
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full" :class="item.is_active ? 'bg-brand-400' : 'bg-slate-600'" />
+            <span class="w-1.5 h-1.5 rounded-full" :class="item.is_active ? 'bg-indigo-400' : 'bg-slate-600'" />
             <button class="p-1.5 rounded-lg hover:bg-surface-muted transition-colors text-slate-400 hover:text-slate-200"
               @click="openForm(item)">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -32,52 +32,57 @@
       </div>
     </div>
 
-    <!-- Modal form -->
-    <div v-if="showForm" style="min-height:420px;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center;"
-      class="fixed inset-0 z-50" @click.self="showForm = false">
-      <div class="w-full bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up">
-        <div class="flex items-center justify-between mb-1">
-          <h3 class="font-display font-semibold text-white text-sm">{{ editing ? 'Редактировать' : 'Добавить' }}</h3>
-          <button class="text-slate-500 hover:text-white" @click="showForm = false">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    <!-- Modal — фиксированный снизу, выше навигации -->
+    <Teleport to="body">
+      <div v-if="showForm"
+        class="fixed inset-0 z-[100]"
+        style="background:rgba(0,0,0,0.7)"
+        @click.self="showForm = false">
+        <div class="absolute bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
+          :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-display font-semibold text-white text-sm">{{ editing ? 'Редактировать' : 'Добавить' }}</h3>
+            <button class="text-slate-500 hover:text-white" @click="showForm = false">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div>
+            <label class="form-label">Заголовок</label>
+            <input v-model="formData.title" type="text" class="form-input" placeholder="Заголовок" />
+          </div>
+
+          <div v-if="type === 'news'">
+            <label class="form-label">Текст</label>
+            <textarea v-model="(formData as any).body" class="form-input" rows="3" placeholder="Текст новости" />
+          </div>
+
+          <div v-if="type === 'discounts'">
+            <label class="form-label">Скидка (%)</label>
+            <input v-model.number="(formData as any).percent" type="number" class="form-input" placeholder="20" />
+          </div>
+
+          <div v-if="type === 'discounts' || type === 'arrivals'">
+            <label class="form-label">{{ type === 'discounts' ? 'Действует до' : 'Ожидаемая дата' }}</label>
+            <input v-model="(formData as any)[dateField]" type="date" class="form-input" />
+          </div>
+
+          <div v-if="type === 'arrivals'">
+            <label class="form-label">Описание</label>
+            <textarea v-model="(formData as any).description" class="form-input" rows="2" placeholder="Что поступит" />
+          </div>
+
+          <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input v-model="formData.is_active" type="checkbox" class="w-4 h-4 rounded accent-indigo-500" />
+            Активно
+          </label>
+
+          <button class="btn-primary w-full" :disabled="saving" @click="save">
+            {{ saving ? 'Сохраняем...' : 'Сохранить' }}
           </button>
         </div>
-
-        <div>
-          <label class="form-label">Заголовок</label>
-          <input v-model="formData.title" type="text" class="form-input" placeholder="Заголовок" />
-        </div>
-
-        <div v-if="type === 'news'">
-          <label class="form-label">Текст</label>
-          <textarea v-model="(formData as any).body" class="form-input" rows="3" placeholder="Текст новости" />
-        </div>
-
-        <div v-if="type === 'discounts'">
-          <label class="form-label">Скидка (%)</label>
-          <input v-model.number="(formData as any).percent" type="number" class="form-input" placeholder="20" />
-        </div>
-
-        <div v-if="type === 'discounts' || type === 'arrivals'">
-          <label class="form-label">{{ type === 'discounts' ? 'Действует до' : 'Ожидаемая дата' }}</label>
-          <input v-model="(formData as any)[dateField]" type="date" class="form-input" />
-        </div>
-
-        <div v-if="type === 'arrivals'">
-          <label class="form-label">Описание</label>
-          <textarea v-model="(formData as any).description" class="form-input" rows="2" placeholder="Что поступит" />
-        </div>
-
-        <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-          <input v-model="formData.is_active" type="checkbox" class="accent-brand-500 w-4 h-4 rounded" />
-          Активно
-        </label>
-
-        <button class="btn-primary w-full" :disabled="saving" @click="save">
-          {{ saving ? 'Сохраняем...' : 'Сохранить' }}
-        </button>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -93,15 +98,14 @@ const saving = ref(false)
 const showForm = ref(false)
 const editing = ref<string | null>(null)
 const items = ref<any[]>([])
+const formData = ref<any>({ title: '', is_active: true })
 
 const dateField = computed(() => props.type === 'discounts' ? 'valid_until' : 'expected_date')
-
-const formData = ref<any>({ title: '', is_active: true })
 
 function subtext(item: any) {
   if (props.type === 'news') return item.published_at ? new Date(item.published_at).toLocaleDateString('ru-RU') : ''
   if (props.type === 'discounts') return `-${item.percent}% · до ${new Date(item.valid_until).toLocaleDateString('ru-RU')}`
-  if (props.type === 'arrivals') return new Date(item.expected_date).toLocaleDateString('ru-RU')
+  if (props.type === 'arrivals') return item.expected_date ? new Date(item.expected_date).toLocaleDateString('ru-RU') : ''
   return ''
 }
 
@@ -148,5 +152,5 @@ onMounted(load)
 
 <style scoped>
 .form-label { @apply block text-xs font-semibold text-slate-400 mb-1.5; }
-.form-input { @apply w-full bg-surface-muted border border-surface-border rounded-xl px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-brand-500 transition-colors resize-none; }
+.form-input { @apply w-full bg-surface-muted border border-surface-border rounded-xl px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-indigo-500 transition-colors resize-none; }
 </style>

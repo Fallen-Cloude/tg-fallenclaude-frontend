@@ -52,24 +52,15 @@ const dayNames: Record<string, string> = {
 const contacts = [
   {
     label: 'Telegram',
-    value: '@yourshop',
-    href: 'https://t.me/yourshop',
-    bg: 'bg-blue-500/15',
+    value: 'Fallen-Claude',
+    href: 'https://t.me/+N8yJhMpTcl05MjJi',
     color: 'text-blue-400',
     icon: '<path d="M21.5 2.5l-19 7.5 7 2.5 2.5 7 3-5 5 4 1.5-16z"/><path d="M9.5 12.5l5-3"/>',
   },
   {
-    label: 'WhatsApp / Телефон',
-    value: '+7 (777) 000-00-00',
-    href: 'tel:+77770000000',
-    bg: 'bg-brand-500/15',
-    color: 'text-brand-400',
-    icon: '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.07 9.81 19.79 19.79 0 011 1.18 2 2 0 013 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>',
-  },
-  {
     label: 'Адрес',
-    value: 'г. Алматы, ул. Примерная, 1',
-    href: 'https://maps.google.com',
+    value: 'г. Минск, ДС Чижовка 1',
+    href: 'https://yandex.by/maps/157/minsk/stops/stop__10044877/?ll=27.642988%2C53.839321&tab=overview&z=18.25',
     bg: 'bg-amber-500/15',
     color: 'text-amber-400',
     icon: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
