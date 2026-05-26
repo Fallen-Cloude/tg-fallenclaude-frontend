@@ -1,37 +1,5 @@
 <template>
-  <!-- Compact mode — для горизонтального скролла внутри подкатегории -->
-  <RouterLink v-if="compact" :to="`/catalog/${product.id}`"
-    class="card flex flex-col overflow-hidden active:scale-[0.97] transition-transform duration-150">
-    <div class="relative aspect-square bg-surface-muted overflow-hidden">
-      <img v-if="product.image_url" :src="product.image_url" :alt="product.name"
-        class="w-full h-full object-cover" loading="lazy" />
-      <div v-else class="w-full h-full flex items-center justify-center text-slate-700">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-        </svg>
-      </div>
-      <div v-if="!product.in_stock" class="absolute inset-0 bg-surface/70 flex items-center justify-center">
-        <span class="badge bg-red-500/20 text-red-400 text-[10px]">Нет</span>
-      </div>
-    </div>
-    <div class="p-2">
-      <p class="text-xs font-semibold text-slate-200 leading-tight line-clamp-2 mb-1.5">{{ product.name }}</p>
-      <div class="flex items-center justify-between gap-1">
-        <div class="flex items-center gap-0.5">
-          <BynIcon :size="11" class="text-indigo-400 flex-shrink-0" />
-          <span class="font-display text-indigo-400 font-bold text-xs">{{ formatPrice(product.price) }}</span>
-        </div>
-        <button v-if="product.in_stock"
-          class="w-6 h-6 rounded-lg bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white transition-all duration-150 flex items-center justify-center active:scale-90 flex-shrink-0"
-          @click.prevent="onAdd">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-      </div>
-    </div>
-  </RouterLink>
-
-  <!-- Normal mode — для обычной сетки -->
-  <RouterLink v-else :to="`/catalog/${product.id}`"
+  <RouterLink :to="`/catalog/${product.id}`"
     class="card flex flex-col overflow-hidden group active:scale-[0.98] transition-transform duration-150">
     <div class="relative aspect-square bg-surface-muted overflow-hidden">
       <img v-if="product.image_url" :src="product.image_url" :alt="product.name"
@@ -47,10 +15,10 @@
     </div>
     <div class="p-3 flex flex-col gap-1.5">
       <p class="text-sm font-semibold leading-tight text-slate-100 line-clamp-2">{{ product.name }}</p>
-      <div class="flex items-center justify-between mt-auto pt-1">
+      <div v-if="price" class="flex items-center justify-between mt-auto pt-1">
         <div class="flex items-center gap-1">
           <BynIcon :size="13" class="text-indigo-400 flex-shrink-0" />
-          <span class="font-display text-indigo-400 font-semibold text-sm">{{ formatPrice(product.price) }}</span>
+          <span class="font-display text-indigo-400 font-semibold text-sm">{{ formatPrice(price) }}</span>
         </div>
         <button v-if="product.in_stock"
           class="w-8 h-8 rounded-xl bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white transition-all duration-150 flex items-center justify-center active:scale-90"
@@ -68,15 +36,13 @@ import { useTelegram } from '@/composables/useTelegram'
 import BynIcon from '@/components/BynIcon.vue'
 import type { Product } from '@/types'
 
-const props = defineProps<{ product: Product; compact?: boolean }>()
+const props = defineProps<{ product: Product; price?: number }>()
 const cart = useCartStore()
 const { haptic } = useTelegram()
 
-function formatPrice(p: number) {
-  return p.toLocaleString('ru-RU')
-}
+function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 function onAdd() {
   haptic('medium')
-  cart.add(props.product)
+  cart.add(props.product, props.price ?? 0)
 }
 </script>

@@ -1,13 +1,13 @@
 <template>
   <div class="animate-fade-in">
-    <!-- Back -->
     <div class="px-4 pt-4 pb-2">
-      <RouterLink to="/catalog" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-white text-sm transition-colors">
+      <button class="inline-flex items-center gap-1.5 text-slate-400 hover:text-white text-sm transition-colors"
+        @click="$router.back()">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        Каталог
-      </RouterLink>
+        Назад
+      </button>
     </div>
 
     <div v-if="loading" class="p-4 space-y-4">
@@ -31,19 +31,19 @@
         <div>
           <div class="flex items-start justify-between gap-3">
             <h1 class="font-display text-lg font-bold text-white leading-snug flex-1">{{ product.name }}</h1>
-            <span class="font-display text-brand-400 font-bold text-xl flex-shrink-0">
-              {{ formatPrice(product.price) }}
-            </span>
+            <div v-if="ssub" class="flex items-center gap-1 flex-shrink-0">
+              <BynIcon :size="16" class="text-indigo-400" />
+              <span class="font-display text-indigo-400 font-bold text-xl">{{ formatPrice(ssub.price) }}</span>
+            </div>
           </div>
-          <div class="mt-2">
-            <span v-if="product.in_stock" class="badge bg-brand-500/15 text-brand-400">В наличии</span>
+          <!-- Крепость и линейка -->
+          <div class="flex items-center gap-2 mt-2 flex-wrap">
+            <span v-if="ssub?.strength" class="badge bg-violet-500/15 text-violet-300">{{ ssub.strength }}</span>
+            <span v-if="ssub" class="badge bg-surface-muted text-slate-400">{{ ssub.name }}</span>
+            <span v-if="product.in_stock" class="badge bg-indigo-500/15 text-indigo-400">В наличии</span>
             <span v-else class="badge bg-red-500/15 text-red-400">Нет в наличии</span>
           </div>
         </div>
-
-        <p v-if="product.description" class="text-slate-400 text-sm leading-relaxed">
-          {{ product.description }}
-        </p>
 
         <div v-if="product.in_stock">
           <div v-if="inCart" class="flex items-center gap-3">
@@ -53,7 +53,7 @@
                 <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
               </button>
               <span class="flex-1 text-center font-display font-bold text-white">{{ inCart.quantity }}</span>
-              <button class="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center active:scale-90 transition-transform"
+              <button class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center active:scale-90 transition-transform"
                 @click="inc">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
               </button>
@@ -74,19 +74,30 @@ import { productsApi } from '@/api'
 import { useCartStore } from '@/stores/cart'
 import { useTelegram } from '@/composables/useTelegram'
 import SkeletonBox from '@/components/SkeletonBox.vue'
-import type { Product } from '@/types'
+import BynIcon from '@/components/BynIcon.vue'
+import type { Product, SubSubCategory } from '@/types'
 
 const route = useRoute()
 const cart = useCartStore()
 const { haptic, notify } = useTelegram()
 const loading = ref(true)
 const product = ref<Product | null>(null)
+const ssub = ref<SubSubCategory | null>(null)
 
 const inCart = computed(() => cart.items.find(i => i.product.id === product.value?.id))
 
-function formatPrice(p: number) { return p.toLocaleString('ru-RU') + ' ₸' }
-function add() { if (product.value) { cart.add(product.value); haptic('medium'); notify('success') } }
-function inc() { if (inCart.value) cart.setQty(inCart.value.product.id, inCart.value.quantity + 1) }
+function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
+
+function add() {
+  if (product.value && ssub.value) {
+    cart.add(product.value, ssub.value.price)
+    haptic('medium')
+    notify('success')
+  }
+}
+function inc() {
+  if (inCart.value) cart.setQty(inCart.value.product.id, inCart.value.quantity + 1)
+}
 function dec() {
   if (!inCart.value) return
   if (inCart.value.quantity <= 1) cart.remove(inCart.value.product.id)
@@ -94,7 +105,15 @@ function dec() {
 }
 
 onMounted(async () => {
-  try { product.value = await productsApi.getOne(route.params.id as string) }
-  finally { loading.value = false }
+  try {
+    const [p, ssubs] = await Promise.all([
+      productsApi.getOne(route.params.id as string),
+      productsApi.getSubSubCategories(),
+    ])
+    product.value = p
+    ssub.value = ssubs.find(s => s.id === p.subsubcategory_id) ?? null
+  } finally {
+    loading.value = false
+  }
 })
 </script>
