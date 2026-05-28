@@ -14,15 +14,16 @@
         <button v-for="cat in categories" :key="cat.id"
           class="card p-5 flex flex-col items-start gap-3 active:scale-95 transition-transform duration-150 text-left"
           @click="selectCategory(cat)">
-          <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 flex items-center justify-center">
-            <span class="text-2xl">{{ catEmoji(cat.slug) }}</span>
+          <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 flex items-center justify-center overflow-hidden">
+            <img v-if="cat.icon_url" :src="cat.icon_url" :alt="cat.name" class="w-full h-full object-cover" />
+            <span v-else class="text-2xl">🛍</span>
           </div>
           <span class="font-display font-semibold text-sm text-white leading-snug">{{ cat.name }}</span>
         </button>
       </div>
     </template>
 
-    <!-- Экран 2: Подкатегории (Catswill, Brusko...) -->
+    <!-- Экран 2: Подкатегории -->
     <template v-else-if="!activeSubCategory">
       <div class="px-4 pt-4 pb-3 sticky top-0 z-10 bg-surface/95 backdrop-blur-xl border-b border-surface-border">
         <div class="flex items-center gap-3">
@@ -43,7 +44,7 @@
       </div>
     </template>
 
-    <!-- Экран 3: Подподкатегории + товары (Catswill Premium / Sour + вкусы) -->
+    <!-- Экран 3: Подподкатегории + товары -->
     <template v-else>
       <div class="px-4 pt-4 pb-3 sticky top-0 z-10 bg-surface/95 backdrop-blur-xl border-b border-surface-border">
         <div class="flex items-center gap-3 mb-3">
@@ -51,9 +52,7 @@
             @click="activeSubCategory = null">
             <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
-          <div>
-            <p class="text-xs text-slate-500">{{ activeCategory.name }} / {{ activeSubCategory.name }}</p>
-          </div>
+          <p class="text-xs text-slate-500">{{ activeCategory.name }} / {{ activeSubCategory.name }}</p>
         </div>
         <div class="relative">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -70,7 +69,7 @@
 
       <div v-else-if="groupedProducts.length" class="p-4 space-y-8">
         <div v-for="group in groupedProducts" :key="group.ssub.id">
-          <!-- Заголовок подподкатегории с ценой и крепостью -->
+          <!-- Заголовок подподкатегории -->
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-display font-bold text-white text-sm">{{ group.ssub.name }}</h2>
             <div class="flex items-center gap-2">
@@ -78,9 +77,10 @@
                 class="bg-violet-500/15 border border-violet-500/20 px-2.5 py-1 rounded-lg">
                 <span class="text-violet-300 font-semibold text-xs">{{ group.ssub.strength }}</span>
               </div>
+              <!-- Цена ПЕРЕД символом -->
               <div class="flex items-center gap-1 bg-indigo-500/15 border border-indigo-500/20 px-2.5 py-1 rounded-lg">
-                <BynIcon :size="11" class="text-indigo-400" />
                 <span class="text-indigo-400 font-display font-bold text-xs">{{ formatPrice(group.ssub.price) }}</span>
+                <BynIcon :size="11" class="text-indigo-400" />
               </div>
             </div>
           </div>
@@ -122,38 +122,31 @@ const activeCategory = ref<Category | null>(null)
 const activeSubCategory = ref<SubCategory | null>(null)
 const search = ref('')
 
-const CAT_EMOJI: Record<string, string> = {
-  liquids: '💧', consumables: '🔧', pods: '📦', snus: '🟢',
-}
-function catEmoji(slug: string) { return CAT_EMOJI[slug] ?? '🛍' }
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 
-// Подкатегории активной категории
 const activeSubs = computed(() =>
   subcategories.value
     .filter(s => s.category_id === activeCategory.value?.id)
     .sort((a, b) => a.sort_order - b.sort_order)
 )
 
-// Кол-во подподкатегорий для подкатегории
 function subSubCount(subId: string) {
   return subsubcategories.value.filter(s => s.subcategory_id === subId).length
 }
 
-// Группировка: подподкатегория → вкусы
 const groupedProducts = computed(() => {
   if (!activeSubCategory.value) return []
-  const subs = subsubcategories.value
+  return subsubcategories.value
     .filter(s => s.subcategory_id === activeSubCategory.value!.id)
     .sort((a, b) => a.sort_order - b.sort_order)
-
-  return subs.map(ssub => ({
-    ssub,
-    products: products.value
-      .filter(p => p.subsubcategory_id === ssub.id)
-      .filter(p => !search.value || p.name.toLowerCase().includes(search.value.toLowerCase()))
-      .sort((a, b) => a.sort_order - b.sort_order),
-  })).filter(g => g.products.length > 0)
+    .map(ssub => ({
+      ssub,
+      products: products.value
+        .filter(p => p.subsubcategory_id === ssub.id)
+        .filter(p => !search.value || p.name.toLowerCase().includes(search.value.toLowerCase()))
+        .sort((a, b) => a.sort_order - b.sort_order),
+    }))
+    .filter(g => g.products.length > 0)
 })
 
 function selectCategory(cat: Category) {

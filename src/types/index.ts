@@ -3,6 +3,7 @@ export interface Category {
   name: string
   slug: string
   sort_order: number
+  icon_url: string
 }
 
 export interface SubCategory {
@@ -36,12 +37,38 @@ export interface CartItem {
   price: number
 }
 
+export interface Discount {
+  id: string
+  title: string
+  percent: number
+  valid_until: string
+  is_active: boolean
+  min_items: number
+  requires_group: boolean
+  group_id: string
+  max_reg_days: number
+}
+
+export interface DiscountCheckResult {
+  valid: boolean
+  discount: Discount | null
+  failed_conditions: string[]
+}
+
+export interface AvailableDay {
+  date: string
+  label: string
+  slots: string[]
+}
+
 export interface Order {
   id: string
   tg_username: string
   tg_user_id: number
   items: CartItem[]
   total: number
+  discount_id?: string
+  discount_amount: number
   pickup_time: string
   status: OrderStatus
   created_at: string
@@ -54,14 +81,6 @@ export interface NewsItem {
   title: string
   body: string
   published_at: string
-  is_active: boolean
-}
-
-export interface Discount {
-  id: string
-  title: string
-  percent: number
-  valid_until: string
   is_active: boolean
 }
 
