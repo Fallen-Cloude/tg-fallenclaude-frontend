@@ -15,7 +15,7 @@
           class="card p-5 flex flex-col items-start gap-3 active:scale-95 transition-transform duration-150 text-left"
           @click="selectCategory(cat)">
           <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 flex items-center justify-center overflow-hidden">
-            <img v-if="cat.icon_url" :src="cat.icon_url" :alt="cat.name" class="w-full h-full object-cover" />
+            <img v-if="cat.icon_url" :src="cat.icon_url" :alt="cat.name" class="w-3/4 h-3/4 object-cover" />
             <span v-else class="text-2xl">🛍</span>
           </div>
           <span class="font-display font-semibold text-sm text-white leading-snug">{{ cat.name }}</span>
