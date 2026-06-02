@@ -19,11 +19,12 @@
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-slate-100 line-clamp-1">{{ item.product.name }}</p>
             <div class="flex items-center gap-1 mt-0.5">
-              <span class="text-indigo-400 font-display font-bold text-sm">
-                {{ formatPrice(item.price * item.quantity) }}
-              </span>
+              <span class="text-indigo-400 font-display font-bold text-sm">{{ formatPrice(item.price * item.quantity) }}</span>
               <BynIcon :size="11" class="text-indigo-400" />
             </div>
+            <p v-if="item.quantity >= item.product.stock" class="text-[10px] text-amber-400 mt-0.5">
+              Максимум {{ item.product.stock }} шт
+            </p>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <button class="w-8 h-8 rounded-lg bg-surface-muted flex items-center justify-center active:scale-90 transition-transform text-slate-400"
@@ -31,15 +32,20 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
             </button>
             <span class="w-5 text-center font-bold text-sm text-white">{{ item.quantity }}</span>
-            <button class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center active:scale-90 transition-transform"
-              @click="cart.setQty(item.product.id, item.quantity + 1)">
+            <button
+              class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition-transform"
+              :class="item.quantity >= item.product.stock
+                ? 'opacity-30 pointer-events-none'
+                : 'active:scale-90'"
+              :disabled="item.quantity >= item.product.stock"
+              @click="inc(item)">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Блок скидки -->
+      <!-- Скидка -->
       <div class="card p-4 mb-4 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="font-display font-semibold text-sm text-white">Скидка</h3>
@@ -47,7 +53,6 @@
             @click="removeDiscount">Убрать</button>
         </div>
 
-        <!-- Скидка не применена -->
         <div v-if="!appliedDiscount">
           <select v-model="selectedDiscountId" class="form-input text-sm">
             <option value="">Выберите скидку...</option>
@@ -61,11 +66,9 @@
           </button>
         </div>
 
-        <!-- Результат проверки — ошибки -->
         <div v-if="discountErrors.length" class="space-y-1">
           <p class="text-xs font-semibold text-red-400">Условия не выполнены:</p>
-          <div v-for="err in discountErrors" :key="err"
-            class="flex items-start gap-2 text-xs text-slate-400">
+          <div v-for="err in discountErrors" :key="err" class="flex items-start gap-2 text-xs text-slate-400">
             <svg class="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
             </svg>
@@ -73,16 +76,15 @@
           </div>
         </div>
 
-        <!-- Скидка применена -->
         <div v-if="appliedDiscount" class="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2">
           <div>
             <p class="text-sm font-semibold text-green-400">{{ appliedDiscount.title }}</p>
             <p class="text-xs text-slate-400 mt-0.5">−{{ appliedDiscount.percent }}% от суммы</p>
           </div>
-          <span class="font-display font-bold text-green-400 text-sm">
-            −{{ formatPrice(discountAmount) }}
-            <BynIcon :size="11" class="inline text-green-400" />
-          </span>
+          <div class="flex items-center gap-1">
+            <span class="font-display font-bold text-green-400 text-sm">−{{ formatPrice(discountAmount) }}</span>
+            <BynIcon :size="11" class="text-green-400" />
+          </div>
         </div>
       </div>
 
@@ -111,7 +113,7 @@
         </div>
       </div>
 
-      <!-- Форма оформления -->
+      <!-- Форма -->
       <div class="card p-4 space-y-3">
         <h2 class="font-display font-semibold text-white text-sm">Оформление заказа</h2>
 
@@ -122,7 +124,6 @@
           <p v-if="errors.username" class="text-red-400 text-xs mt-1">{{ errors.username }}</p>
         </div>
 
-        <!-- Выбор даты -->
         <div>
           <label class="form-label">Дата самовывоза</label>
           <div v-if="loadingDays" class="form-input text-slate-600 text-sm">Загрузка расписания...</div>
@@ -131,7 +132,7 @@
           </div>
           <div v-else class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
             <button v-for="day in availableDays" :key="day.date"
-              class="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95 text-center"
+              class="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95"
               :class="selectedDate === day.date
                 ? 'bg-indigo-500 text-white'
                 : 'bg-surface-muted border border-surface-border text-slate-400'"
@@ -141,7 +142,6 @@
           </div>
         </div>
 
-        <!-- Выбор времени -->
         <div v-if="selectedDate">
           <label class="form-label">Время</label>
           <div class="grid grid-cols-4 gap-1.5">
@@ -166,13 +166,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useTelegram } from '@/composables/useTelegram'
 import { ordersApi, contentApi, scheduleApi } from '@/api'
 import BynIcon from '@/components/BynIcon.vue'
-import type { Discount, AvailableDay } from '@/types'
+import type { Discount, AvailableDay, CartItem } from '@/types'
 
 const cart = useCartStore()
 const router = useRouter()
@@ -196,23 +196,25 @@ const form = ref({
 })
 const errors = ref<{ username?: string; pickup_time?: string }>({})
 
-const selectedDaySlots = computed(() => {
-  const day = availableDays.value.find(d => d.date === selectedDate.value)
-  return day?.slots ?? []
-})
-
+const selectedDaySlots = computed(() =>
+  availableDays.value.find(d => d.date === selectedDate.value)?.slots ?? []
+)
 const discountAmount = computed(() => {
   if (!appliedDiscount.value) return 0
   return Math.round(cart.total * appliedDiscount.value.percent / 100)
 })
-
 const finalTotal = computed(() => cart.total - discountAmount.value)
 
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 
-function dec(item: { product: { id: string }; quantity: number }) {
+function dec(item: CartItem) {
   if (item.quantity <= 1) cart.remove(item.product.id)
   else cart.setQty(item.product.id, item.quantity - 1)
+}
+
+function inc(item: CartItem) {
+  if (item.quantity >= item.product.stock) return
+  cart.setQty(item.product.id, item.quantity + 1)
 }
 
 function selectDate(day: AvailableDay) {
@@ -287,16 +289,12 @@ onMounted(async () => {
     availableDays.value = days
     availableDiscounts.value = discounts.filter(d => d.is_active)
 
-    // Если пришли с главной со скидкой
     const discountId = route.query.discount_id as string
     if (discountId) {
       selectedDiscountId.value = discountId
-      if (cart.items.length > 0) {
-        await applyDiscount()
-      }
+      if (cart.items.length > 0) await applyDiscount()
     }
 
-    // Автовыбор первого дня
     if (days.length) selectDate(days[0])
   } finally {
     loadingDays.value = false
