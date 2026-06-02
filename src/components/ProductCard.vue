@@ -17,8 +17,8 @@
       <p class="text-sm font-semibold leading-tight text-slate-100 line-clamp-2">{{ product.name }}</p>
       <div v-if="price" class="flex items-center justify-between mt-auto pt-1">
         <div class="flex items-center gap-1">
-          <BynIcon :size="13" class="text-indigo-400 flex-shrink-0" />
-          <span class="font-display text-indigo-400 font-semibold text-sm">{{ formatPrice(price) }}</span>
+          <BynIcon :size="14" class="text-indigo-400 flex-shrink-0" />
+          <span class="font-display text-indigo-400 font-semibold text-l">{{ formatPrice(price) }}</span>
         </div>
         <button v-if="product.in_stock"
           class="w-8 h-8 rounded-xl bg-indigo-500/20 hover:bg-indigo-500 text-indigo-400 hover:text-white transition-all duration-150 flex items-center justify-center active:scale-90"
