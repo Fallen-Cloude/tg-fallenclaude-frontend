@@ -28,6 +28,7 @@ export interface Product {
   subsubcategory_id: string
   image_url: string
   in_stock: boolean
+  stock: number
   sort_order: number
 }
 

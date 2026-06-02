@@ -32,20 +32,21 @@
           <div class="flex items-start justify-between gap-3">
             <h1 class="font-display text-lg font-bold text-white leading-snug flex-1">{{ product.name }}</h1>
             <div v-if="ssub" class="flex items-center gap-1 flex-shrink-0">
-              <BynIcon :size="16" class="text-indigo-400" />
               <span class="font-display text-indigo-400 font-bold text-xl">{{ formatPrice(ssub.price) }}</span>
+              <BynIcon :size="16" class="text-indigo-400" />
             </div>
           </div>
-          <!-- Крепость и линейка -->
           <div class="flex items-center gap-2 mt-2 flex-wrap">
             <span v-if="ssub?.strength" class="badge bg-violet-500/15 text-violet-300">{{ ssub.strength }}</span>
             <span v-if="ssub" class="badge bg-surface-muted text-slate-400">{{ ssub.name }}</span>
-            <span v-if="product.in_stock" class="badge bg-indigo-500/15 text-indigo-400">В наличии</span>
+            <span v-if="product.in_stock && product.stock > 0" class="badge bg-indigo-500/15 text-indigo-400">В наличии</span>
             <span v-else class="badge bg-red-500/15 text-red-400">Нет в наличии</span>
+            <span v-if="product.stock > 0 && product.stock <= 5"
+              class="badge bg-amber-500/15 text-amber-400">Осталось {{ product.stock }} шт</span>
           </div>
         </div>
 
-        <div v-if="product.in_stock">
+        <div v-if="product.in_stock && product.stock > 0">
           <div v-if="inCart" class="flex items-center gap-3">
             <div class="flex items-center gap-3 card p-1 flex-1">
               <button class="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center active:scale-90 transition-transform"
@@ -53,7 +54,9 @@
                 <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
               </button>
               <span class="flex-1 text-center font-display font-bold text-white">{{ inCart.quantity }}</span>
-              <button class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center active:scale-90 transition-transform"
+              <button
+                class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center active:scale-90 transition-transform"
+                :class="{ 'opacity-40 pointer-events-none': inCart.quantity >= product.stock }"
                 @click="inc">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
               </button>
@@ -61,6 +64,9 @@
             <RouterLink to="/cart" class="btn-primary flex-shrink-0">В корзину</RouterLink>
           </div>
           <button v-else class="btn-primary w-full" @click="add">Добавить в корзину</button>
+        </div>
+        <div v-else class="w-full py-3 rounded-2xl bg-surface-muted text-center text-slate-500 text-sm">
+          Нет в наличии
         </div>
       </div>
     </template>
@@ -89,14 +95,16 @@ const inCart = computed(() => cart.items.find(i => i.product.id === product.valu
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 
 function add() {
-  if (product.value && ssub.value) {
-    cart.add(product.value, ssub.value.price)
-    haptic('medium')
-    notify('success')
-  }
+  if (!product.value || !ssub.value) return
+  if (inCart.value && inCart.value.quantity >= product.value.stock) return
+  cart.add(product.value, ssub.value.price)
+  haptic('medium')
+  notify('success')
 }
 function inc() {
-  if (inCart.value) cart.setQty(inCart.value.product.id, inCart.value.quantity + 1)
+  if (!inCart.value || !product.value) return
+  if (inCart.value.quantity >= product.value.stock) return
+  cart.setQty(inCart.value.product.id, inCart.value.quantity + 1)
 }
 function dec() {
   if (!inCart.value) return
