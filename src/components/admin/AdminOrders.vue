@@ -27,12 +27,21 @@
         </div>
 
         <div class="flex items-center justify-between pt-1 border-t border-surface-border">
-          <span class="font-display font-bold text-brand-400 text-sm">{{ formatPrice(order.total) }}</span>
+          <div>
+            <div class="flex items-center gap-1">
+              <span class="font-display font-bold text-indigo-400 text-sm">{{ formatPrice(order.total) }}</span>
+              <BynIcon :size="12" class="text-indigo-400" />
+            </div>
+            <div v-if="order.discount_amount > 0" class="flex items-center gap-1 mt-0.5">
+              <span class="text-xs text-green-400">скидка −{{ formatPrice(order.discount_amount) }}</span>
+              <BynIcon :size="10" class="text-green-400" />
+            </div>
+          </div>
           <div class="flex gap-1.5">
             <button v-for="action in statusActions(order.status)" :key="action.status"
-              class="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all active:scale-95"
-              :class="action.cls"
-              @click="updateStatus(order, action.status)">
+                    class="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all active:scale-95"
+                    :class="action.cls"
+                    @click="updateStatus(order, action.status)">
               {{ action.label }}
             </button>
           </div>
@@ -50,14 +59,18 @@ import { ordersApi } from '@/api'
 import { useTelegram } from '@/composables/useTelegram'
 import SkeletonBox from '@/components/SkeletonBox.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import BynIcon from '@/components/BynIcon.vue'
 import type { Order, OrderStatus } from '@/types'
 
 const orders = ref<Order[]>([])
 const loading = ref(true)
 const { haptic } = useTelegram()
 
-function formatPrice(p: number) { return p.toLocaleString('ru-RU') + ' ₸' }
-function formatDate(s: string) { return new Date(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }
+function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
+function formatDate(s: string) {
+  if (!s) return ''
+  return new Date(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 function statusActions(status: OrderStatus) {
   const map: Record<OrderStatus, { status: OrderStatus; label: string; cls: string }[]> = {
@@ -66,7 +79,7 @@ function statusActions(status: OrderStatus) {
       { status: 'cancelled', label: 'Отменить', cls: 'bg-red-500/15 text-red-400' },
     ],
     confirmed: [
-      { status: 'done', label: 'Выдан', cls: 'bg-brand-500/20 text-brand-400' },
+      { status: 'done', label: 'Выдан', cls: 'bg-indigo-500/20 text-indigo-400' },
       { status: 'cancelled', label: 'Отменить', cls: 'bg-red-500/15 text-red-400' },
     ],
     done: [], cancelled: [],
