@@ -27,30 +27,41 @@
         <h2 class="section-title">Скидки</h2>
         <div class="space-y-2">
           <div v-for="d in discounts" :key="d.id"
-            class="card p-4 flex items-center gap-3 active:scale-[0.98] transition-transform duration-150 cursor-pointer"
+            class="card p-4 active:scale-[0.98] transition-transform duration-150 cursor-pointer"
             @click="goToCart(d)">
-            <div class="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-              <span class="font-display text-red-400 font-bold text-sm">-{{ d.percent }}%</span>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <span class="font-display text-red-400 font-bold text-sm">-{{ d.percent }}%</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-sm text-slate-100">{{ d.title }}</p>
+                <p class="text-xs text-slate-500 mt-0.5">До {{ formatDate(d.valid_until) }}</p>
+              </div>
+              <svg class="w-4 h-4 text-slate-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </div>
-            <div class="min-w-0 flex-1">
-              <p class="font-semibold text-sm text-slate-100 truncate">{{ d.title }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">До {{ formatDate(d.valid_until) }}</p>
-              <!-- Условия -->
-              <div class="flex flex-wrap gap-1 mt-1.5">
-                <span v-if="d.min_items > 1" class="text-[10px] bg-surface-muted px-1.5 py-0.5 rounded text-slate-400">
-                  от {{ d.min_items }} ед.
-                </span>
-                <span v-if="d.requires_group" class="text-[10px] bg-surface-muted px-1.5 py-0.5 rounded text-slate-400">
-                  участник группы
-                </span>
-                <span v-if="d.max_reg_days > 0" class="text-[10px] bg-surface-muted px-1.5 py-0.5 rounded text-slate-400">
-                  новым за {{ d.max_reg_days }} дн.
+            <!-- Условия скидки -->
+            <div v-if="hasConditions(d)" class="border-t border-surface-border pt-2 space-y-1">
+              <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Условия</p>
+              <div v-if="d.min_items > 0" class="flex items-center gap-1.5 text-xs text-slate-400">
+                <svg class="w-3 h-3 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                Минимум {{ d.min_items }} ед. товара в корзине
+              </div>
+              <div v-if="d.group_link" class="flex items-center gap-1.5 text-xs text-slate-400">
+                <svg class="w-3 h-3 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                Состоять в группе
+                <a :href="d.group_link" target="_blank" class="text-indigo-400 underline" @click.stop>{{ d.group_link }}</a>
+              </div>
+              <div v-if="d.reg_date_from || d.reg_date_to" class="flex items-center gap-1.5 text-xs text-slate-400">
+                <svg class="w-3 h-3 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <span>
+                  Регистрация
+                  <template v-if="d.reg_date_from"> с {{ formatDate(d.reg_date_from) }}</template>
+                  <template v-if="d.reg_date_to"> по {{ formatDate(d.reg_date_to) }}</template>
                 </span>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
           </div>
         </div>
       </section>
@@ -110,7 +121,15 @@ function formatDate(s: string) {
   return new Date(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 }
 
+function hasConditions(d: Discount) {
+  return d.min_items > 0 || d.group_link || d.reg_date_from || d.reg_date_to
+}
+
 function goToCart(discount: Discount) {
+  if (cart.items.length === 0) {
+    router.push({ path: '/catalog' })
+    return
+  }
   router.push({ path: '/cart', query: { discount_id: discount.id } })
 }
 

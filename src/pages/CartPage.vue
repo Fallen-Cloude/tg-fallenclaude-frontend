@@ -1,5 +1,21 @@
 <template>
   <div class="px-4 pt-6 pb-4 animate-fade-in">
+
+    <!-- Всплывающее уведомление -->
+    <Teleport to="body">
+      <div v-if="toast" class="fixed top-4 left-4 right-4 z-[200] animate-slide-up">
+        <div class="bg-red-500/20 border border-red-500/40 rounded-2xl p-4">
+          <p class="text-sm font-semibold text-red-400 mb-2">Условия не выполнены</p>
+          <div v-for="err in toast" :key="err" class="flex items-start gap-2 text-xs text-slate-300 mb-1">
+            <svg class="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
+            </svg>
+            {{ err }}
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <h1 class="font-display text-xl font-bold text-white mb-4">Корзина</h1>
 
     <div v-if="!cart.items.length" class="text-center py-20">
@@ -32,11 +48,8 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
             </button>
             <span class="w-5 text-center font-bold text-sm text-white">{{ item.quantity }}</span>
-            <button
-              class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition-transform"
-              :class="item.quantity >= item.product.stock
-                ? 'opacity-30 pointer-events-none'
-                : 'active:scale-90'"
+            <button class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition-transform"
+              :class="item.quantity >= item.product.stock ? 'opacity-30 pointer-events-none' : 'active:scale-90'"
               :disabled="item.quantity >= item.product.stock"
               @click="inc(item)">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -66,17 +79,8 @@
           </button>
         </div>
 
-        <div v-if="discountErrors.length" class="space-y-1">
-          <p class="text-xs font-semibold text-red-400">Условия не выполнены:</p>
-          <div v-for="err in discountErrors" :key="err" class="flex items-start gap-2 text-xs text-slate-400">
-            <svg class="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
-            </svg>
-            {{ err }}
-          </div>
-        </div>
-
-        <div v-if="appliedDiscount" class="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2">
+        <div v-if="appliedDiscount"
+          class="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2">
           <div>
             <p class="text-sm font-semibold text-green-400">{{ appliedDiscount.title }}</p>
             <p class="text-xs text-slate-400 mt-0.5">−{{ appliedDiscount.percent }}% от суммы</p>
@@ -127,15 +131,11 @@
         <div>
           <label class="form-label">Дата самовывоза</label>
           <div v-if="loadingDays" class="form-input text-slate-600 text-sm">Загрузка расписания...</div>
-          <div v-else-if="!availableDays.length" class="form-input text-red-400 text-sm">
-            Нет доступных дней в ближайшие 2 недели
-          </div>
-          <div v-else class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+          <div v-else-if="!availableDays.length" class="form-input text-red-400 text-sm">Нет доступных дней</div>
+          <div v-else class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             <button v-for="day in availableDays" :key="day.date"
               class="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95"
-              :class="selectedDate === day.date
-                ? 'bg-indigo-500 text-white'
-                : 'bg-surface-muted border border-surface-border text-slate-400'"
+              :class="selectedDate === day.date ? 'bg-indigo-500 text-white' : 'bg-surface-muted border border-surface-border text-slate-400'"
               @click="selectDate(day)">
               {{ day.label }}
             </button>
@@ -147,9 +147,7 @@
           <div class="grid grid-cols-4 gap-1.5">
             <button v-for="slot in selectedDaySlots" :key="slot"
               class="py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95"
-              :class="form.pickup_time === slot
-                ? 'bg-indigo-500 text-white'
-                : 'bg-surface-muted border border-surface-border text-slate-400'"
+              :class="form.pickup_time === slot ? 'bg-indigo-500 text-white' : 'bg-surface-muted border border-surface-border text-slate-400'"
               @click="form.pickup_time = slot">
               {{ slot }}
             </button>
@@ -183,11 +181,11 @@ const availableDays = ref<AvailableDay[]>([])
 const loadingDays = ref(true)
 const selectedDate = ref('')
 const submitting = ref(false)
+const toast = ref<string[] | null>(null)
 
 const availableDiscounts = ref<Discount[]>([])
 const selectedDiscountId = ref('')
 const appliedDiscount = ref<Discount | null>(null)
-const discountErrors = ref<string[]>([])
 const checkingDiscount = ref(false)
 
 const form = ref({
@@ -206,32 +204,31 @@ const discountAmount = computed(() => {
 const finalTotal = computed(() => cart.total - discountAmount.value)
 
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
-
 function dec(item: CartItem) {
   if (item.quantity <= 1) cart.remove(item.product.id)
   else cart.setQty(item.product.id, item.quantity - 1)
 }
-
 function inc(item: CartItem) {
   if (item.quantity >= item.product.stock) return
   cart.setQty(item.product.id, item.quantity + 1)
 }
-
 function selectDate(day: AvailableDay) {
   selectedDate.value = day.date
   form.value.pickup_time = ''
 }
-
 function removeDiscount() {
   appliedDiscount.value = null
   selectedDiscountId.value = ''
-  discountErrors.value = []
+}
+
+function showToast(errors: string[]) {
+  toast.value = errors
+  setTimeout(() => { toast.value = null }, 4000)
 }
 
 async function applyDiscount() {
   if (!selectedDiscountId.value) return
   checkingDiscount.value = true
-  discountErrors.value = []
   try {
     const result = await contentApi.checkDiscount({
       discount_id: selectedDiscountId.value,
@@ -241,10 +238,10 @@ async function applyDiscount() {
     if (result.valid && result.discount) {
       appliedDiscount.value = result.discount
     } else {
-      discountErrors.value = result.failed_conditions
+      showToast(result.failed_conditions)
     }
   } catch {
-    discountErrors.value = ['Не удалось проверить скидку']
+    showToast(['Не удалось проверить скидку'])
   } finally {
     checkingDiscount.value = false
   }
@@ -263,11 +260,10 @@ async function submit() {
   submitting.value = true
   haptic('medium')
   try {
-    const pickupDateTime = `${selectedDate.value} ${form.value.pickup_time}`
     await ordersApi.create({
       tg_username: form.value.username,
       items: cart.items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
-      pickup_time: pickupDateTime,
+      pickup_time: `${selectedDate.value} ${form.value.pickup_time}`,
       discount_id: appliedDiscount.value?.id,
     })
     notify('success')
@@ -293,8 +289,8 @@ onMounted(async () => {
     if (discountId) {
       selectedDiscountId.value = discountId
       if (cart.items.length > 0) await applyDiscount()
+      else showToast(['Сначала добавьте товары в корзину'])
     }
-
     if (days.length) selectDate(days[0])
   } finally {
     loadingDays.value = false

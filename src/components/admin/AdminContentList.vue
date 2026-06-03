@@ -15,29 +15,21 @@
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
             <span class="w-1.5 h-1.5 rounded-full" :class="item.is_active ? 'bg-indigo-400' : 'bg-slate-600'" />
-            <button class="p-1.5 rounded-lg hover:bg-surface-muted transition-colors text-slate-400 hover:text-slate-200"
-              @click="openForm(item)">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
+            <button class="p-1.5 rounded-lg hover:bg-surface-muted transition-colors text-slate-400 hover:text-slate-200" @click="openForm(item)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="p-1.5 rounded-lg hover:bg-red-500/15 transition-colors text-slate-600 hover:text-red-400"
-              @click="del(item.id)">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-              </svg>
+            <button class="p-1.5 rounded-lg hover:bg-red-500/15 transition-colors text-slate-600 hover:text-red-400" @click="del(item.id)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal — фиксированный снизу, выше навигации -->
+    <!-- Modal -->
     <Teleport to="body">
-      <div v-if="showForm"
-        class="fixed inset-0 z-[100]"
-        style="background:rgba(0,0,0,0.7)"
-        @click.self="showForm = false">
+      <div v-if="showForm" class="fixed inset-0 z-[100] overflow-y-auto"
+        style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
         <div class="absolute bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
           :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
           <div class="flex items-center justify-between mb-1">
@@ -52,25 +44,67 @@
             <input v-model="formData.title" type="text" class="form-input" placeholder="Заголовок" />
           </div>
 
+          <!-- News -->
           <div v-if="type === 'news'">
             <label class="form-label">Текст</label>
-            <textarea v-model="(formData as any).body" class="form-input" rows="3" placeholder="Текст новости" />
+            <textarea v-model="formData.body" class="form-input" rows="3" placeholder="Текст новости" />
           </div>
 
-          <div v-if="type === 'discounts'">
-            <label class="form-label">Скидка (%)</label>
-            <input v-model.number="(formData as any).percent" type="number" class="form-input" placeholder="20" />
-          </div>
+          <!-- Discounts -->
+          <template v-if="type === 'discounts'">
+            <div>
+              <label class="form-label">Скидка (%)</label>
+              <input v-model.number="formData.percent" type="number" class="form-input" placeholder="20" />
+            </div>
+            <div>
+              <label class="form-label">Действует до</label>
+              <input v-model="formData.valid_until" type="date" class="form-input" />
+            </div>
 
-          <div v-if="type === 'discounts' || type === 'arrivals'">
-            <label class="form-label">{{ type === 'discounts' ? 'Действует до' : 'Ожидаемая дата' }}</label>
-            <input v-model="(formData as any)[dateField]" type="date" class="form-input" />
-          </div>
+            <div class="border-t border-surface-border pt-3">
+              <p class="text-xs font-semibold text-slate-400 mb-3">Условия (оставь пустым если не нужно)</p>
 
-          <div v-if="type === 'arrivals'">
-            <label class="form-label">Описание</label>
-            <textarea v-model="(formData as any).description" class="form-input" rows="2" placeholder="Что поступит" />
-          </div>
+              <div class="space-y-3">
+                <div>
+                  <label class="form-label">Минимум товаров в корзине</label>
+                  <input v-model.number="formData.min_items" type="number" min="0" class="form-input"
+                    placeholder="0 — условие не активно" />
+                  <p class="text-[10px] text-slate-600 mt-1">Например 3 — скидка только при заказе от 3 единиц</p>
+                </div>
+
+                <div>
+                  <label class="form-label">Ссылка на группу / канал</label>
+                  <input v-model="formData.group_link" type="text" class="form-input"
+                    placeholder="https://t.me/yourgroup (пусто — не проверять)" />
+                  <p class="text-[10px] text-slate-600 mt-1">Бот проверит состоит ли пользователь в группе</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="form-label">Регистрация с</label>
+                    <input v-model="formData.reg_date_from" type="date" class="form-input" />
+                  </div>
+                  <div>
+                    <label class="form-label">Регистрация по</label>
+                    <input v-model="formData.reg_date_to" type="date" class="form-input" />
+                  </div>
+                </div>
+                <p class="text-[10px] text-slate-600">Дата первого входа пользователя в бота</p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Arrivals -->
+          <template v-if="type === 'arrivals'">
+            <div>
+              <label class="form-label">Ожидаемая дата</label>
+              <input v-model="formData.expected_date" type="date" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">Описание</label>
+              <textarea v-model="formData.description" class="form-input" rows="2" placeholder="Что поступит" />
+            </div>
+          </template>
 
           <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
             <input v-model="formData.is_active" type="checkbox" class="w-4 h-4 rounded accent-indigo-500" />
@@ -87,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { contentApi } from '@/api'
 import SkeletonBox from '@/components/SkeletonBox.vue'
 
@@ -100,18 +134,26 @@ const editing = ref<string | null>(null)
 const items = ref<any[]>([])
 const formData = ref<any>({ title: '', is_active: true })
 
-const dateField = computed(() => props.type === 'discounts' ? 'valid_until' : 'expected_date')
-
 function subtext(item: any) {
   if (props.type === 'news') return item.published_at ? new Date(item.published_at).toLocaleDateString('ru-RU') : ''
-  if (props.type === 'discounts') return `-${item.percent}% · до ${new Date(item.valid_until).toLocaleDateString('ru-RU')}`
+  if (props.type === 'discounts') return `-${item.percent}% · до ${item.valid_until ? new Date(item.valid_until).toLocaleDateString('ru-RU') : '?'}`
   if (props.type === 'arrivals') return item.expected_date ? new Date(item.expected_date).toLocaleDateString('ru-RU') : ''
   return ''
 }
 
 function openForm(item?: any) {
-  if (item) { editing.value = item.id; formData.value = { ...item } }
-  else { editing.value = null; formData.value = { title: '', is_active: true } }
+  if (item) {
+    editing.value = item.id
+    formData.value = { ...item }
+  } else {
+    editing.value = null
+    formData.value = {
+      title: '', is_active: true,
+      ...(props.type === 'discounts' ? { percent: 0, valid_until: '', min_items: 0, group_link: '', reg_date_from: '', reg_date_to: '' } : {}),
+      ...(props.type === 'arrivals' ? { expected_date: '', description: '' } : {}),
+      ...(props.type === 'news' ? { body: '', published_at: '' } : {}),
+    }
+  }
   showForm.value = true
 }
 
