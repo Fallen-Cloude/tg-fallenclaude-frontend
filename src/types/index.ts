@@ -45,7 +45,7 @@ export interface Discount {
   valid_until: string
   is_active: boolean
   min_items: number
-  group_link: string
+  requires_group: boolean
   reg_date_from: string
   reg_date_to: string
 }
