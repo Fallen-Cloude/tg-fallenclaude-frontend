@@ -29,9 +29,9 @@
     <!-- Modal -->
     <Teleport to="body">
       <div v-if="showForm" class="fixed inset-0 z-[100] overflow-y-auto"
-        style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
+           style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
         <div class="absolute bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
-          :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
+             :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
           <div class="flex items-center justify-between mb-1">
             <h3 class="font-display font-semibold text-white text-sm">{{ editing ? 'Редактировать' : 'Добавить' }}</h3>
             <button class="text-slate-500 hover:text-white" @click="showForm = false">
@@ -63,21 +63,22 @@
 
             <div class="border-t border-surface-border pt-3">
               <p class="text-xs font-semibold text-slate-400 mb-3">Условия (оставь пустым если не нужно)</p>
-
               <div class="space-y-3">
+
                 <div>
                   <label class="form-label">Минимум товаров в корзине</label>
                   <input v-model.number="formData.min_items" type="number" min="0" class="form-input"
-                    placeholder="0 — условие не активно" />
+                         placeholder="0 — условие не активно" />
                   <p class="text-[10px] text-slate-600 mt-1">Например 3 — скидка только при заказе от 3 единиц</p>
                 </div>
 
-                <div>
-                  <label class="form-label">Ссылка на группу / канал</label>
-                  <input v-model="formData.group_link" type="text" class="form-input"
-                    placeholder="https://t.me/yourgroup (пусто — не проверять)" />
-                  <p class="text-[10px] text-slate-600 mt-1">Бот проверит состоит ли пользователь в группе</p>
-                </div>
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input v-model="formData.requires_group" type="checkbox" class="w-4 h-4 rounded accent-indigo-500" />
+                  <div>
+                    <p class="text-sm text-slate-200">Проверять участие в группе</p>
+                    <p class="text-[10px] text-slate-600 mt-0.5">Бот проверит состоит ли пользователь в вашей группе</p>
+                  </div>
+                </label>
 
                 <div class="grid grid-cols-2 gap-2">
                   <div>
@@ -89,7 +90,7 @@
                     <input v-model="formData.reg_date_to" type="date" class="form-input" />
                   </div>
                 </div>
-                <p class="text-[10px] text-slate-600">Дата первого входа пользователя в бота</p>
+                <p class="text-[10px] text-slate-600">Дата первого входа пользователя в бота (/start)</p>
               </div>
             </div>
           </template>
@@ -149,7 +150,7 @@ function openForm(item?: any) {
     editing.value = null
     formData.value = {
       title: '', is_active: true,
-      ...(props.type === 'discounts' ? { percent: 0, valid_until: '', min_items: 0, group_link: '', reg_date_from: '', reg_date_to: '' } : {}),
+      ...(props.type === 'discounts' ? { percent: 0, valid_until: '', min_items: 0, requires_group: false, reg_date_from: '', reg_date_to: '' } : {}),
       ...(props.type === 'arrivals' ? { expected_date: '', description: '' } : {}),
       ...(props.type === 'news' ? { body: '', published_at: '' } : {}),
     }
@@ -160,14 +161,13 @@ function openForm(item?: any) {
 async function save() {
   saving.value = true
   try {
-    const api = contentApi
     if (editing.value) {
-      const fn = props.type === 'news' ? api.updateNews : props.type === 'discounts' ? api.updateDiscount : api.updateArrival
+      const fn = props.type === 'news' ? contentApi.updateNews : props.type === 'discounts' ? contentApi.updateDiscount : contentApi.updateArrival
       const updated = await fn(editing.value, formData.value)
       const idx = items.value.findIndex(i => i.id === editing.value)
       if (idx !== -1) items.value[idx] = updated
     } else {
-      const fn = props.type === 'news' ? api.createNews : props.type === 'discounts' ? api.createDiscount : api.createArrival
+      const fn = props.type === 'news' ? contentApi.createNews : props.type === 'discounts' ? contentApi.createDiscount : contentApi.createArrival
       items.value.unshift(await fn(formData.value))
     }
     showForm.value = false
@@ -180,16 +180,14 @@ async function del(id: string) {
   items.value = items.value.filter(i => i.id !== id)
 }
 
-async function load() {
+onMounted(async () => {
   loading.value = true
   try {
     items.value = props.type === 'news' ? await contentApi.getNews()
-      : props.type === 'discounts' ? await contentApi.getDiscounts()
-      : await contentApi.getArrivals()
+        : props.type === 'discounts' ? await contentApi.getDiscounts()
+            : await contentApi.getArrivals()
   } finally { loading.value = false }
-}
-
-onMounted(load)
+})
 </script>
 
 <style scoped>
