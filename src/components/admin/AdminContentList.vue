@@ -29,9 +29,9 @@
     <!-- Modal -->
     <Teleport to="body">
       <div v-if="showForm" class="fixed inset-0 z-[100] overflow-y-auto"
-           style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
+        style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
         <div class="absolute bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
-             :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
+          :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
           <div class="flex items-center justify-between mb-1">
             <h3 class="font-display font-semibold text-white text-sm">{{ editing ? 'Редактировать' : 'Добавить' }}</h3>
             <button class="text-slate-500 hover:text-white" @click="showForm = false">
@@ -68,7 +68,7 @@
                 <div>
                   <label class="form-label">Минимум товаров в корзине</label>
                   <input v-model.number="formData.min_items" type="number" min="0" class="form-input"
-                         placeholder="0 — условие не активно" />
+                    placeholder="0 — условие не активно" />
                   <p class="text-[10px] text-slate-600 mt-1">Например 3 — скидка только при заказе от 3 единиц</p>
                 </div>
 
@@ -184,8 +184,8 @@ onMounted(async () => {
   loading.value = true
   try {
     items.value = props.type === 'news' ? await contentApi.getNews()
-        : props.type === 'discounts' ? await contentApi.getDiscounts()
-            : await contentApi.getArrivals()
+      : props.type === 'discounts' ? await contentApi.getDiscounts()
+      : await contentApi.getArrivals()
   } finally { loading.value = false }
 })
 </script>

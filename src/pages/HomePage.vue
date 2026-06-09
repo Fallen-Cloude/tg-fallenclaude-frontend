@@ -27,8 +27,8 @@
         <h2 class="section-title">Скидки</h2>
         <div class="space-y-2">
           <div v-for="d in discounts" :key="d.id"
-               class="card p-4 active:scale-[0.98] transition-transform duration-150 cursor-pointer"
-               @click="goToCart(d)">
+            class="card p-4 active:scale-[0.98] transition-transform duration-150 cursor-pointer"
+            @click="goToCart(d)">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
                 <span class="font-display text-red-400 font-bold text-sm">-{{ d.percent }}%</span>
@@ -85,7 +85,7 @@
       </section>
 
       <div v-if="!news.length && !discounts.length && !arrivals.length"
-           class="text-center py-16 text-slate-600">
+        class="text-center py-16 text-slate-600">
         <p class="text-4xl mb-3">📭</p>
         <p class="text-sm">Новостей пока нет</p>
       </div>
