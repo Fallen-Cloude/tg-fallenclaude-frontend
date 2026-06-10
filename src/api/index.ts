@@ -19,7 +19,7 @@ export const ordersApi = {
     items: { product_id: string; quantity: number }[]
     pickup_time: string
     discount_id?: string
-  }) => http.post<Order>('/orders', data).then(r => r.data),
+  }) => http.post<Order>('/orders', data, { timeout: 30000 }).then(r => r.data),
   getMine:      () => http.get<Order[]>('/orders/mine').then(r => r.data),
   getAll:       () => http.get<Order[]>('/admin/orders').then(r => r.data),
   updateStatus: (id: string, status: OrderStatus) =>

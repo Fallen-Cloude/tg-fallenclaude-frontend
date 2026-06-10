@@ -89,8 +89,14 @@ function statusActions(status: OrderStatus) {
 
 async function updateStatus(order: Order, status: OrderStatus) {
   haptic('medium')
-  order.status = status
-  await ordersApi.updateStatus(order.id, status)
+  try {
+    await ordersApi.updateStatus(order.id, status)
+    order.status = status
+  } catch (e: unknown) {
+    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    alert(detail || 'Не удалось обновить статус')
+    await load()
+  }
 }
 
 async function load() {

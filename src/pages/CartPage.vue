@@ -269,8 +269,11 @@ async function submit() {
     notify('success')
     cart.clear()
     router.push('/profile')
-  } catch {
+  } catch (e: unknown) {
     notify('error')
+    const detail = (e as { response?: { data?: { detail?: string | string[] } } })?.response?.data?.detail
+    const message = Array.isArray(detail) ? detail.join(', ') : detail
+    showToast([message || 'Не удалось оформить заказ'])
   } finally {
     submitting.value = false
   }

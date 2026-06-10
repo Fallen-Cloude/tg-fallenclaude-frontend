@@ -1,5 +1,6 @@
 node_modules/
 dist/
+*.vue.js
 .env
 .env.local
 .DS_Store

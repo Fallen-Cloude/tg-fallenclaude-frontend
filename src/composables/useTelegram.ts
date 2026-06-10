@@ -10,6 +10,9 @@ declare global {
         ready(): void
         close(): void
         expand(): void
+        disableVerticalSwipes(): void
+        enableClosingConfirmation(): void
+        disableClosingConfirmation(): void
         MainButton: {
           text: string
           show(): void
@@ -51,7 +54,12 @@ export function useTelegram() {
     return !!adminUsername && user.value?.username === adminUsername
   })
 
-  function ready() { tg?.ready(); tg?.expand() }
+  function ready() {
+    tg?.ready()
+    tg?.expand()
+    tg?.disableVerticalSwipes?.()
+    tg?.enableClosingConfirmation?.()
+  }
   function haptic(style: 'light' | 'medium' | 'heavy' = 'light') {
     tg?.HapticFeedback?.impactOccurred(style)
   }

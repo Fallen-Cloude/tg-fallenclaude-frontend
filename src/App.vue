@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col min-h-dvh">
-    <main class="flex-1 overflow-y-auto pb-[calc(var(--nav-h)+var(--tg-safe-bottom))]">
+    <main class="flex-1 overflow-y-auto overscroll-y-contain pb-[calc(var(--nav-h)+var(--tg-safe-bottom))]">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
           <component :is="Component" :key="$route.name" />
