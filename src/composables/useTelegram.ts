@@ -1,4 +1,5 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import http from '@/api/http'
 import type { TgUser } from '@/types'
 
 declare global {
@@ -48,18 +49,25 @@ const tg = window.Telegram?.WebApp
 export function useTelegram() {
   const user = ref<TgUser | null>(tg?.initDataUnsafe?.user ?? null)
   const initData = tg?.initData ?? ''
+  const isAdmin = ref(false)
 
-  const isAdmin = computed(() => {
-    const adminUsername = import.meta.env.VITE_ADMIN_USERNAME
-    return !!adminUsername && user.value?.username === adminUsername
-  })
+  async function checkAdminStatus() {
+    try {
+      const { data } = await http.get<{ admin: boolean }>('/admin/me')
+      isAdmin.value = !!data.admin
+    } catch {
+      isAdmin.value = false
+    }
+  }
 
   function ready() {
     tg?.ready()
     tg?.expand()
     tg?.disableVerticalSwipes?.()
     tg?.enableClosingConfirmation?.()
+    void checkAdminStatus()
   }
+
   function haptic(style: 'light' | 'medium' | 'heavy' = 'light') {
     tg?.HapticFeedback?.impactOccurred(style)
   }
@@ -67,5 +75,5 @@ export function useTelegram() {
     tg?.HapticFeedback?.notificationOccurred(type)
   }
 
-  return { user, initData, isAdmin, ready, haptic, notify, tg }
+  return { user, initData, isAdmin, checkAdminStatus, ready, haptic, notify, tg }
 }

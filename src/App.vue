@@ -26,7 +26,10 @@ import NavTab from '@/components/NavTab.vue'
 const { ready, isAdmin } = useTelegram()
 const cart = useCartStore()
 
-onMounted(ready)
+onMounted(async () => {
+  ready()
+  await cart.hydrate()
+})
 
 const tabs = computed(() => {
   const base = [

@@ -123,9 +123,9 @@
 
         <div>
           <label class="form-label">Telegram username</label>
-          <input v-model="form.username" type="text" placeholder="@username"
-            class="form-input" :class="{ 'border-red-500': errors.username }" />
-          <p v-if="errors.username" class="text-red-400 text-xs mt-1">{{ errors.username }}</p>
+          <input :value="form.username || '— не указан в Telegram —'" type="text" readonly
+            class="form-input opacity-70 cursor-not-allowed" />
+          <p class="text-xs text-slate-500 mt-1">Берётся из вашего Telegram-аккаунта</p>
         </div>
 
         <div>
@@ -192,7 +192,7 @@ const form = ref({
   username: user.value?.username ? '@' + user.value.username : '',
   pickup_time: '',
 })
-const errors = ref<{ username?: string; pickup_time?: string }>({})
+const errors = ref<{ pickup_time?: string }>({})
 
 const selectedDaySlots = computed(() =>
   availableDays.value.find(d => d.date === selectedDate.value)?.slots ?? []
@@ -232,7 +232,6 @@ async function applyDiscount() {
   try {
     const result = await contentApi.checkDiscount({
       discount_id: selectedDiscountId.value,
-      tg_user_id: user.value?.id ?? 0,
       items_count: cart.count,
     })
     if (result.valid && result.discount) {
@@ -249,8 +248,6 @@ async function applyDiscount() {
 
 function validate() {
   errors.value = {}
-  if (!form.value.username.trim()) errors.value.username = 'Введите username'
-  else if (!form.value.username.startsWith('@')) errors.value.username = 'Username должен начинаться с @'
   if (!form.value.pickup_time) errors.value.pickup_time = 'Выберите время'
   return !Object.keys(errors.value).length
 }
@@ -261,7 +258,7 @@ async function submit() {
   haptic('medium')
   try {
     await ordersApi.create({
-      tg_username: form.value.username,
+      tg_username: form.value.username || undefined,
       items: cart.items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
       pickup_time: `${selectedDate.value} ${form.value.pickup_time}`,
       discount_id: appliedDiscount.value?.id,

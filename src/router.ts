@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { useTelegram } from '@/composables/useTelegram'
+import http from '@/api/http'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -14,13 +14,18 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: () => import('@/pages/AdminPage.vue'),
-      beforeEnter: () => {
-        const { isAdmin } = useTelegram()
-        if (!isAdmin.value) return '/'
-      }
+      beforeEnter: async () => {
+        try {
+          const { data } = await http.get<{ admin: boolean }>('/admin/me')
+          if (data.admin) return true
+        } catch {
+          /* not admin */
+        }
+        return '/'
+      },
     },
-    { path: '/:pathMatch(.*)*', redirect: '/' }
-  ]
+    { path: '/:pathMatch(.*)*', redirect: '/' },
+  ],
 })
 
 export default router

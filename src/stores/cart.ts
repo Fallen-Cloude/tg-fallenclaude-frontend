@@ -1,13 +1,66 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { productsApi } from '@/api'
 import type { CartItem, Product } from '@/types'
 
-export const useCartStore = defineStore('cart', () => {
-  const items = ref<CartItem[]>(
-    JSON.parse(localStorage.getItem('cart') ?? '[]')
-  )
+type StoredItem = { product_id: string; quantity: number }
 
-  function save() { localStorage.setItem('cart', JSON.stringify(items.value)) }
+function readStored(): StoredItem[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem('cart') ?? '[]')
+    if (!Array.isArray(raw)) return []
+    return raw
+      .map((item: { product_id?: string; product?: Product; quantity?: number }) => {
+        const product_id = item.product_id ?? item.product?.id
+        const quantity = item.quantity ?? 0
+        if (!product_id || quantity <= 0) return null
+        return { product_id, quantity }
+      })
+      .filter(Boolean) as StoredItem[]
+  } catch {
+    return []
+  }
+}
+
+export const useCartStore = defineStore('cart', () => {
+  const items = ref<CartItem[]>([])
+  const hydrated = ref(false)
+
+  function save() {
+    const stored: StoredItem[] = items.value.map(i => ({
+      product_id: i.product.id,
+      quantity: i.quantity,
+    }))
+    localStorage.setItem('cart', JSON.stringify(stored))
+  }
+
+  async function hydrate() {
+    const stored = readStored()
+    if (!stored.length) {
+      items.value = []
+      hydrated.value = true
+      return
+    }
+    const [products, subsubs] = await Promise.all([
+      productsApi.getAll(),
+      productsApi.getSubSubCategories(),
+    ])
+    const next: CartItem[] = []
+    for (const entry of stored) {
+      const product = products.find(p => p.id === entry.product_id)
+      if (!product) continue
+      const ssub = subsubs.find(s => s.id === product.subsubcategory_id)
+      if (!ssub) continue
+      next.push({
+        product,
+        quantity: Math.min(entry.quantity, product.stock > 0 ? product.stock : entry.quantity),
+        price: ssub.price,
+      })
+    }
+    items.value = next
+    save()
+    hydrated.value = true
+  }
 
   const count = computed(() => items.value.reduce((s, i) => s + i.quantity, 0))
   const total = computed(() => items.value.reduce((s, i) => s + i.price * i.quantity, 0))
@@ -32,5 +85,5 @@ export const useCartStore = defineStore('cart', () => {
 
   function clear() { items.value = []; save() }
 
-  return { items, count, total, add, remove, setQty, clear }
+  return { items, count, total, hydrated, hydrate, add, remove, setQty, clear }
 })

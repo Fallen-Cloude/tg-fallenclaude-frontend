@@ -15,7 +15,7 @@ export const productsApi = {
 
 export const ordersApi = {
   create: (data: {
-    tg_username: string
+    tg_username?: string
     items: { product_id: string; quantity: number }[]
     pickup_time: string
     discount_id?: string
@@ -30,8 +30,8 @@ export const contentApi = {
   getNews:      () => http.get<NewsItem[]>('/news').then(r => r.data),
   getDiscounts: () => http.get<Discount[]>('/discounts').then(r => r.data),
   checkDiscount: (data: {
-    discount_id: string; tg_user_id: number
-    items_count: number; reg_date?: string
+    discount_id: string
+    items_count: number
   }) => http.post<DiscountCheckResult>('/discounts/check', data).then(r => r.data),
   getArrivals:  () => http.get<Arrival[]>('/arrivals').then(r => r.data),
 
