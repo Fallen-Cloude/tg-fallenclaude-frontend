@@ -2,7 +2,7 @@ import http from './http'
 import type {
   Product, Category, SubCategory, SubSubCategory,
   Order, OrderStatus, NewsItem, Discount, DiscountCheckResult,
-  Arrival, ScheduleDay, AvailableDay
+  Arrival, ScheduleDay, AvailableDay, UserProfile
 } from '@/types'
 
 export const productsApi = {
@@ -54,4 +54,8 @@ export const scheduleApi = {
   getSlots:      (date?: string) => http.get<string[]>('/schedule/slots', { params: date ? { date } : {} }).then(r => r.data),
   update:        (days: ScheduleDay[], interval: number) =>
     http.put('/admin/schedule', { days, interval }).then(r => r.data),
+}
+
+export const usersApi = {
+  getMe: () => http.get<UserProfile>('/users/me').then(r => r.data),
 }

@@ -48,6 +48,24 @@ export interface Discount {
   requires_group: boolean
   reg_date_from: string
   reg_date_to: string
+  is_referral: boolean
+}
+
+export interface ReferralInfo {
+  username: string
+  reg_date: string
+  orders_count: number
+  qualified: boolean
+}
+
+export interface UserProfile {
+  tg_user_id: number
+  reg_date: string
+  referral_link: string
+  referral_credits_available: number
+  referral_credits_used: number
+  referral_credits_earned: number
+  referrals: ReferralInfo[]
 }
 
 export interface DiscountCheckResult {

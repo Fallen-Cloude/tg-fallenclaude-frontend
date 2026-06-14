@@ -60,6 +60,10 @@
                   <template v-if="d.reg_date_to"> по {{ formatDate(d.reg_date_to) }}</template>
                 </span>
               </div>
+              <div v-if="d.is_referral" class="flex items-center gap-1.5 text-xs text-slate-400">
+                <svg class="w-3 h-3 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                Реферальная — нужен приглашённый с выданным заказом
+              </div>
             </div>
           </div>
         </div>
@@ -121,7 +125,7 @@ function formatDate(s: string) {
 }
 
 function hasConditions(d: Discount) {
-  return d.min_items > 0 || d.requires_group || d.reg_date_from || d.reg_date_to
+  return d.min_items > 0 || d.requires_group || d.reg_date_from || d.reg_date_to || d.is_referral
 }
 
 function goToCart(discount: Discount) {

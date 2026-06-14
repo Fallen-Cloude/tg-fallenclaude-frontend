@@ -80,6 +80,16 @@
                   </div>
                 </label>
 
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input v-model="formData.is_referral" type="checkbox" class="w-4 h-4 rounded accent-indigo-500" />
+                  <div>
+                    <p class="text-sm text-slate-200">Реферальная скидка</p>
+                    <p class="text-[10px] text-slate-600 mt-0.5">
+                      Доступна только при наличии приглашённых с выданным заказом (1 приглашение = 1 использование)
+                    </p>
+                  </div>
+                </label>
+
                 <div class="grid grid-cols-2 gap-2">
                   <div>
                     <label class="form-label">Регистрация с</label>
@@ -137,7 +147,7 @@ const formData = ref<any>({ title: '', is_active: true })
 
 function subtext(item: any) {
   if (props.type === 'news') return item.published_at ? new Date(item.published_at).toLocaleDateString('ru-RU') : ''
-  if (props.type === 'discounts') return `-${item.percent}% · до ${item.valid_until ? new Date(item.valid_until).toLocaleDateString('ru-RU') : '?'}`
+  if (props.type === 'discounts') return `-${item.percent}% · до ${item.valid_until ? new Date(item.valid_until).toLocaleDateString('ru-RU') : '?'}${item.is_referral ? ' · реф.' : ''}`
   if (props.type === 'arrivals') return item.expected_date ? new Date(item.expected_date).toLocaleDateString('ru-RU') : ''
   return ''
 }
@@ -150,7 +160,7 @@ function openForm(item?: any) {
     editing.value = null
     formData.value = {
       title: '', is_active: true,
-      ...(props.type === 'discounts' ? { percent: 0, valid_until: '', min_items: 0, requires_group: false, reg_date_from: '', reg_date_to: '' } : {}),
+      ...(props.type === 'discounts' ? { percent: 0, valid_until: '', min_items: 0, requires_group: false, reg_date_from: '', reg_date_to: '', is_referral: false } : {}),
       ...(props.type === 'arrivals' ? { expected_date: '', description: '' } : {}),
       ...(props.type === 'news' ? { body: '', published_at: '' } : {}),
     }
