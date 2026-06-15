@@ -28,9 +28,9 @@
 
     <!-- Modal -->
     <Teleport to="body">
-      <div v-if="showForm" class="fixed inset-0 z-[100] overflow-y-auto"
+      <div v-if="showForm" class="fixed inset-0 z-[100] overflow-y-auto overscroll-y-contain"
         style="background:rgba(0,0,0,0.7)" @click.self="showForm = false">
-        <div class="absolute bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
+        <div class="fixed bottom-0 left-0 right-0 bg-surface-card border border-surface-border rounded-t-3xl p-5 space-y-3 animate-slide-up"
           :style="{ paddingBottom: 'calc(20px + var(--tg-safe-bottom))' }">
           <div class="flex items-center justify-between mb-1">
             <h3 class="font-display font-semibold text-white text-sm">{{ editing ? 'Редактировать' : 'Добавить' }}</h3>
