@@ -36,7 +36,6 @@ onMounted(async () => {
   ready()
   await cart.hydrate()
 })
-</script>
 
 const tabs = computed(() => {
   const base = [

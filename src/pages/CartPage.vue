@@ -176,7 +176,6 @@ import type { Discount, AvailableDay, CartItem } from '@/types'
 const cart = useCartStore()
 const catalog = useCatalogStore()
 
-const cart = useCartStore()
 const router = useRouter()
 const route = useRoute()
 const { user, haptic, notify } = useTelegram()

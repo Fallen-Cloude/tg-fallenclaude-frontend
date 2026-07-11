@@ -11,13 +11,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-const isVisible = ref(true)
+interface Props {
+  visible: boolean
+}
 
-// Скрываем preloader после полной загрузки приложения
+const props = defineProps<Props>()
+const isVisible = ref(props.visible)
+
+// Скрываем preloader только после полной загрузки приложения
 onMounted(() => {
-  setTimeout(() => {
-    isVisible.value = false
-  }, 1500)
+  // Не скрываем автоматически - ждем сигнала от App.vue
+})
+
+// Слушаем изменения видимости из родителя
+watch([() => props.visible], (newVal) => {
+  isVisible.value = newVal
 })
 </script>
 
