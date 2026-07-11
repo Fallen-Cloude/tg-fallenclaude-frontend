@@ -1,11 +1,16 @@
 <template>
   <div class="flex flex-col min-h-dvh">
+    <!-- Экран загрузки -->
+    <Preloader />
+
     <main class="flex-1 overflow-y-auto overscroll-y-contain pb-[calc(var(--nav-h)+var(--tg-safe-bottom))]">
-      <RouterView v-slot="{ Component }">
-        <Transition name="page" mode="out-in">
-          <component :is="Component" :key="$route.name" />
-        </Transition>
-      </RouterView>
+      <KeepAlive>
+        <RouterView v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" :key="$route.name" />
+          </Transition>
+        </RouterView>
+      </KeepAlive>
     </main>
 
     <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-surface-border bg-surface/90 backdrop-blur-xl"
@@ -22,6 +27,7 @@ import { computed, onMounted } from 'vue'
 import { useTelegram } from '@/composables/useTelegram'
 import { useCartStore } from '@/stores/cart'
 import NavTab from '@/components/NavTab.vue'
+import Preloader from '@/components/Preloader.vue'
 
 const { ready, isAdmin } = useTelegram()
 const cart = useCartStore()
@@ -30,6 +36,7 @@ onMounted(async () => {
   ready()
   await cart.hydrate()
 })
+</script>
 
 const tabs = computed(() => {
   const base = [

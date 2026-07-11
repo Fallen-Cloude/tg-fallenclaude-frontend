@@ -32,12 +32,14 @@
 
 <script setup lang="ts">
 import { useCartStore } from '@/stores/cart'
+import { useCatalogStore } from '@/stores/catalog'
 import { useTelegram } from '@/composables/useTelegram'
 import BynIcon from '@/components/BynIcon.vue'
 import type { Product } from '@/types'
 
 const props = defineProps<{ product: Product; price?: number }>()
 const cart = useCartStore()
+const catalog = useCatalogStore()
 const { haptic } = useTelegram()
 
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }

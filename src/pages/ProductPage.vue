@@ -120,6 +120,9 @@ onMounted(async () => {
     ])
     product.value = p
     ssub.value = ssubs.find(s => s.id === p.subsubcategory_id) ?? null
+  } catch (error: unknown) {
+    console.error('[ProductPage] Ошибка загрузки товара:', error)
+    // Товар может быть удалён или API недоступен
   } finally {
     loading.value = false
   }

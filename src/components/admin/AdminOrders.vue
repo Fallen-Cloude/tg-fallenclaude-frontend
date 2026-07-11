@@ -93,8 +93,12 @@ async function updateStatus(order: Order, status: OrderStatus) {
     await ordersApi.updateStatus(order.id, status)
     order.status = status
   } catch (e: unknown) {
-    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-    alert(detail || 'Не удалось обновить статус')
+    const detail = (e as { response?: { data?: { detail?: string[] | string } } })?.response?.data?.detail
+    const errors = Array.isArray(detail) ? detail : [detail || 'Не удалось обновить статус']
+    
+    // Использовать Telegram уведомления вместо alert()
+    notify('error')
+    showToast(errors)
     await load()
   }
 }

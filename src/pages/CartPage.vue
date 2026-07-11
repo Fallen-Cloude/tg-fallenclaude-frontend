@@ -167,10 +167,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
+import { useCatalogStore } from '@/stores/catalog'
 import { useTelegram } from '@/composables/useTelegram'
 import { ordersApi, contentApi, scheduleApi } from '@/api'
 import BynIcon from '@/components/BynIcon.vue'
 import type { Discount, AvailableDay, CartItem } from '@/types'
+
+const cart = useCartStore()
+const catalog = useCatalogStore()
 
 const cart = useCartStore()
 const router = useRouter()
@@ -189,7 +193,7 @@ const appliedDiscount = ref<Discount | null>(null)
 const checkingDiscount = ref(false)
 
 const form = ref({
-  username: user.value?.username ? '@' + user.value.username : '',
+  username: user.value?.username ? '@' + user.value.username : '—',
   pickup_time: '',
 })
 const errors = ref<{ pickup_time?: string }>({})
@@ -254,23 +258,80 @@ function validate() {
 
 async function submit() {
   if (!validate()) return
+  
+  // Проверяем, что каталог загружен
+  if (!catalog.loaded) {
+    showToast(['Каталог загружается, попробуйте позже'])
+    submitting.value = false
+    await catalog.loadCatalog()
+    if (!catalog.loaded) {
+      showToast(['Не удалось загрузить каталог'])
+      submitting.value = false
+      return
+    }
+  }
+  
+  // Проверяем наличие товаров перед оформлением заказа
+  const itemsWithPrice: Array<{ product_id: string; quantity: number; price: number }> = cart.items.map(i => ({
+    product_id: i.product.id,
+    quantity: i.quantity,
+    price: i.price,
+  }))
+  
+  // Финальная проверка наличия товаров через API (избегаем race condition с кэшем)
+  for (const item of itemsWithPrice) {
+    try {
+      const product = await productsApi.getOne(item.product_id)
+      if (!product) {
+        showToast([`Товар ${item.product.name} удалён из каталога`])
+        submitting.value = false
+        return
+      }
+      if (product.stock < item.quantity) {
+        showToast([`Товар ${item.product.name} больше не в наличии (${product.stock}/${item.quantity})`])
+        submitting.value = false
+        return
+      }
+    } catch (error: unknown) {
+      console.error(`[CartPage] Ошибка проверки товара ${item.product_id}:`, error)
+      showToast(['Не удалось проверить наличие товара'])
+      submitting.value = false
+      return
+    }
+  }
+  
+  // Рассчитываем итоговую сумму со скидкой перед отправкой
+  const totalBeforeDiscount = itemsWithPrice.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  
   submitting.value = true
   haptic('medium')
+  
   try {
     await ordersApi.create({
       tg_username: form.value.username || undefined,
-      items: cart.items.map(i => ({ product_id: i.product.id, quantity: i.quantity })),
+      items: itemsWithPrice,
       pickup_time: `${selectedDate.value} ${form.value.pickup_time}`,
       discount_id: appliedDiscount.value?.id,
     })
+    
     notify('success')
     cart.clear()
     router.push('/profile')
   } catch (e: unknown) {
     notify('error')
+    console.error('Checkout error:', e)
     const detail = (e as { response?: { data?: { detail?: string | string[] } } })?.response?.data?.detail
-    const message = Array.isArray(detail) ? detail.join(', ') : detail
-    showToast([message || 'Не удалось оформить заказ'])
+    let errors: string[] = []
+    if (Array.isArray(detail)) {
+      errors = detail
+    } else if (typeof detail === 'string') {
+      // Если детали это одна строка с точкой с запятой — разбиваем на массив
+      errors = detail.split('; ').map(s => s.trim()).filter(Boolean)
+    }
+    if (!errors.length) {
+      errors = ['Не удалось оформить заказ']
+    }
+    showToast(errors)
   } finally {
     submitting.value = false
   }
@@ -278,6 +339,7 @@ async function submit() {
 
 onMounted(async () => {
   try {
+    await catalog.loadCatalog()
     const [days, discounts] = await Promise.all([
       scheduleApi.getAvailableDays(),
       contentApi.getDiscounts(),
@@ -292,6 +354,9 @@ onMounted(async () => {
       else showToast(['Сначала добавьте товары в корзину'])
     }
     if (days.length) selectDate(days[0])
+  } catch (error: unknown) {
+    console.error('[CartPage] Ошибка загрузки расписания:', error)
+    // Расписание недоступно — пользователь может перезагрузить страницу
   } finally {
     loadingDays.value = false
   }

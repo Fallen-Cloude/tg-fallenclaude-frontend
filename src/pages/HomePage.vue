@@ -130,6 +130,7 @@ function hasConditions(d: Discount) {
 
 function goToCart(discount: Discount) {
   if (cart.items.length === 0) {
+    // Можно добавить уведомление, но сейчас просто переходим в каталог
     router.push('/catalog')
     return
   }
@@ -146,6 +147,10 @@ onMounted(async () => {
     news.value = n.filter(x => x.is_active)
     discounts.value = d.filter(x => x.is_active)
     arrivals.value = a.filter(x => x.is_active)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Не удалось загрузить контент'
+    console.error('[HomePage]', message)
+    notify('error', `Ошибка загрузки: ${message}`) // ✅ Уведомление!
   } finally {
     loading.value = false
   }

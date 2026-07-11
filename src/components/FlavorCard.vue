@@ -40,11 +40,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
+import { useCatalogStore } from '@/stores/catalog'
 import { useTelegram } from '@/composables/useTelegram'
 import type { Product } from '@/types'
 
 const props = defineProps<{ product: Product; price: number }>()
 const cart = useCartStore()
+const catalog = useCatalogStore()
 const { haptic } = useTelegram()
 
 const inCartQty = computed(() =>

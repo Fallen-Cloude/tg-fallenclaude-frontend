@@ -121,6 +121,8 @@ const products = ref<Product[]>([])
 const activeCategory = ref<Category | null>(null)
 const activeSubCategory = ref<SubCategory | null>(null)
 const search = ref('')
+const retryCount = ref(0)
+const maxRetries = 3
 
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 
@@ -167,6 +169,15 @@ onMounted(async () => {
     subcategories.value = subs
     subsubcategories.value = ssubs
     products.value = prods
+  } catch (error: unknown) {
+    console.error('[CatalogPage]', error)
+    if (retryCount.value < maxRetries) {
+      retryCount.value++
+      notify('warning', 'Не удалось загрузить каталог. Повторная попытка...')
+      setTimeout(() => loadCatalog(), 2000)
+    } else {
+      notify('error', 'Каталог недоступен. Пожалуйста, перезагрузите страницу или свяжитесь с поддержкой.')
+    }
   } finally {
     loading.value = false
   }

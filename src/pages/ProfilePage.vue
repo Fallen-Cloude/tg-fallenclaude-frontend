@@ -146,6 +146,9 @@ onMounted(async () => {
     ])
     orders.value = ordersData
     profile.value = profileData
+  } catch (error: unknown) {
+    console.error('[ProfilePage] Ошибка загрузки профиля:', error)
+    // Профиль или заказы недоступны
   } finally {
     loadingOrders.value = false
     loadingProfile.value = false

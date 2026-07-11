@@ -48,12 +48,27 @@ export const useCartStore = defineStore('cart', () => {
     const next: CartItem[] = []
     for (const entry of stored) {
       const product = products.find(p => p.id === entry.product_id)
-      if (!product) continue
+      if (!product) {
+        console.warn(`[Cart] Товар ${entry.product_id} не найден в каталоге, пропускаем`)
+        continue
+      }
       const ssub = subsubs.find(s => s.id === product.subsubcategory_id)
-      if (!ssub) continue
+      if (!ssub) {
+        console.warn(`[Cart] Подкатегория для товара ${product.id} не найдена, пропускаем`)
+        continue
+      }
+      // Если товар нет в наличии — уменьшаем quantity до доступного stock
+      const availableStock = product.stock > 0 ? product.stock : 0
+      const finalQuantity = Math.min(entry.quantity, availableStock)
+      
+      // Если товара больше нет в наличии и quantity был больше 0 — предупреждаем
+      if (availableStock === 0 && entry.quantity > 0) {
+        console.warn(`[Cart] Товар ${product.name} (${product.id}) больше не в наличии!`)
+      }
+      
       next.push({
         product,
-        quantity: Math.min(entry.quantity, product.stock > 0 ? product.stock : entry.quantity),
+        quantity: finalQuantity,
         price: ssub.price,
       })
     }

@@ -13,7 +13,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:8000', changeOrigin: true }
+      '/api': { target: 'http://localhost:8000', changeOrigin: true } // Только для dev!
     }
-  }
+  },
+  // Для продакшена убедитесь, что CORS настроен в backend на:
+  // https://tg-fallenclaude-backend-production.up.railway.app/api
 })
