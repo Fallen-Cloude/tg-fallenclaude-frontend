@@ -169,7 +169,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { useCatalogStore } from '@/stores/catalog'
 import { useTelegram } from '@/composables/useTelegram'
-import { ordersApi, contentApi, scheduleApi } from '@/api'
+import { ordersApi, contentApi, scheduleApi, productsApi } from '@/api'
 import BynIcon from '@/components/BynIcon.vue'
 import type { Discount, AvailableDay, CartItem } from '@/types'
 
@@ -271,10 +271,11 @@ async function submit() {
   }
   
   // Проверяем наличие товаров перед оформлением заказа
-  const itemsWithPrice: Array<{ product_id: string; quantity: number; price: number }> = cart.items.map(i => ({
+  const itemsWithPrice: Array<{ product_id: string; quantity: number; price: number; product?: any }> = cart.items.map(i => ({
     product_id: i.product.id,
     quantity: i.quantity,
     price: i.price,
+    product: i.product
   }))
   
   // Финальная проверка наличия товаров через API (избегаем race condition с кэшем)

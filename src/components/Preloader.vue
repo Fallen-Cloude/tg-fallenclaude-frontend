@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 interface Props {
-  visible: boolean
+  visible?: boolean
 }
 
 const props = defineProps<Props>()
@@ -24,8 +24,8 @@ onMounted(() => {
 })
 
 // Слушаем изменения видимости из родителя
-watch([() => props.visible], (newVal) => {
-  isVisible.value = newVal
+watch([() => props.visible], (newVal: boolean | undefined) => {
+  isVisible.value = newVal ?? true
 })
 </script>
 

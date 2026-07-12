@@ -106,7 +106,7 @@ import { useCartStore } from '@/stores/cart'
 import SkeletonBox from '@/components/SkeletonBox.vue'
 import type { NewsItem, Discount, Arrival } from '@/types'
 
-const { user } = useTelegram()
+const { user, notify } = useTelegram()
 const router = useRouter()
 const cart = useCartStore()
 const loading = ref(true)
@@ -150,7 +150,7 @@ onMounted(async () => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Не удалось загрузить контент'
     console.error('[HomePage]', message)
-    notify('error', `Ошибка загрузки: ${message}`) // ✅ Уведомление!
+    notify('error') // ✅ Уведомление!
   } finally {
     loading.value = false
   }

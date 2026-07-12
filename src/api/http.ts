@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 
 // Конфигурация по умолчанию для всех запросов
 const defaultConfig = {

@@ -64,7 +64,7 @@ import type { Order, OrderStatus } from '@/types'
 
 const orders = ref<Order[]>([])
 const loading = ref(true)
-const { haptic } = useTelegram()
+const { haptic, notify, tg } = useTelegram()
 
 function formatPrice(p: number) { return p.toLocaleString('ru-RU') }
 function formatDate(s: string) {
@@ -98,7 +98,12 @@ async function updateStatus(order: Order, status: OrderStatus) {
     
     // Использовать Telegram уведомления вместо alert()
     notify('error')
-    showToast(errors)
+    const errorMessage = errors.join('\n')
+    if (tg) {
+      tg.showAlert({ message: errorMessage })
+    } else {
+      alert(errorMessage)
+    }
     await load()
   }
 }

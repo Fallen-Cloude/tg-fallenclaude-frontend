@@ -108,10 +108,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { productsApi } from '@/api'
+import { useTelegram } from '@/composables/useTelegram'
 import SkeletonBox from '@/components/SkeletonBox.vue'
 import BynIcon from '@/components/BynIcon.vue'
 import FlavorCard from '@/components/FlavorCard.vue'
 import type { Category, SubCategory, SubSubCategory, Product } from '@/types'
+
+const { notify } = useTelegram()
 
 const loading = ref(true)
 const categories = ref<Category[]>([])
@@ -157,7 +160,8 @@ function selectCategory(cat: Category) {
   search.value = ''
 }
 
-onMounted(async () => {
+async function loadCatalog() {
+  loading.value = true
   try {
     const [cats, subs, ssubs, prods] = await Promise.all([
       productsApi.getCategories(),
@@ -173,15 +177,17 @@ onMounted(async () => {
     console.error('[CatalogPage]', error)
     if (retryCount.value < maxRetries) {
       retryCount.value++
-      notify('warning', 'Не удалось загрузить каталог. Повторная попытка...')
-      setTimeout(() => loadCatalog(), 2000)
+      notify('warning')
+      setTimeout(loadCatalog, 2000)
     } else {
-      notify('error', 'Каталог недоступен. Пожалуйста, перезагрузите страницу или свяжитесь с поддержкой.')
+      notify('error')
     }
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadCatalog)
 </script>
 
 <style>
