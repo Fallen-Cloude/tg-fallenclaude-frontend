@@ -24,7 +24,7 @@ onMounted(() => {
 })
 
 // Слушаем изменения видимости из родителя
-watch([() => props.visible], (newVal: boolean | undefined) => {
+watch(() => props.visible, (newVal: boolean | undefined) => {
   isVisible.value = newVal ?? true
 })
 </script>
